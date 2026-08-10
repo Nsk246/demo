@@ -75,6 +75,9 @@ async def probe(model: str, timeout: float) -> int:
     instructions, tools = real_context()
     print(f"thinking : {settings.gemini_thinking_level}")
     print(f"endpoint : {settings.gemini_end_of_speech_ms}ms of silence")
+    print(f"end sens : {settings.gemini_end_of_speech_sensitivity or 'API default'}")
+    print(f"start sen: {settings.gemini_start_of_speech_sensitivity or 'API default'}")
+    print(f"prefix   : {settings.gemini_prefix_padding_ms or 'API default'}")
     print(f"prompt   : {len(instructions)} chars (~{len(instructions) // 4} tokens)")
     print(f"tools    : {len(tools)}")
 
@@ -85,6 +88,11 @@ async def probe(model: str, timeout: float) -> int:
         thinking_level=settings.gemini_thinking_level,
         end_of_speech_silence_ms=settings.gemini_end_of_speech_ms,
     )
+
+    # Print what will actually be sent. A turn-taking setting that silently
+    # failed to apply is otherwise only visible on a phone call.
+    detection = provider.build_config(instructions, tools)["realtime_input_config"]
+    print(f"turn cfg : {detection}")
 
     print("\n[1/3] opening a session...")
     started = time.time()

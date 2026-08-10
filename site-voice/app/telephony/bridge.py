@@ -121,6 +121,8 @@ class MediaBridge:
         connect_timeout_s: float = 10.0,
         greeting: str | None = None,
         stall_after_ms: int = 1500,
+        barge_rms_threshold: int = BARGE_RMS_THRESHOLD,
+        barge_sustain_frames: int = BARGE_SUSTAIN_FRAMES,
     ):
         self.ws = ws
         self.provider = provider
@@ -141,6 +143,11 @@ class MediaBridge:
         # answer, which it has done. Lookups here land around 1100ms, so at
         # 1500ms a normal one never triggers this path at all.
         self.stall_after_ms = stall_after_ms
+        # Tunable per line. Lower the threshold if the agent keeps talking
+        # over the caller; raise it if background noise cuts the agent off.
+        # Sustain frames are 20ms each, so 3 is 60ms of continuous speech.
+        self.barge_rms_threshold = barge_rms_threshold
+        self.barge_sustain_frames = barge_sustain_frames
         self.tool_calls: list[dict] = []
         self._tool_tasks: set[asyncio.Task] = set()
 
@@ -267,15 +274,15 @@ class MediaBridge:
                 rms = float(np.sqrt(np.mean(samples.astype(np.float64) ** 2)))
 
                 if self._agent_speaking:
-                    if rms > BARGE_RMS_THRESHOLD:
+                    if rms > self.barge_rms_threshold:
                         self._loud_frames += 1
-                        if self._loud_frames >= BARGE_SUSTAIN_FRAMES:
+                        if self._loud_frames >= self.barge_sustain_frames:
                             await self._barge_in()
                     else:
                         self._loud_frames = 0
                 else:
                     # Caller is talking; the clock for their turn keeps moving.
-                    if rms > BARGE_RMS_THRESHOLD:
+                    if rms > self.barge_rms_threshold:
                         self._turn.caller_stopped_at = None
                     elif self._turn.caller_stopped_at is None:
                         self._turn.caller_stopped_at = time.time()
@@ -287,7 +294,7 @@ class MediaBridge:
                 # Only speech-bearing frames. Stamping every frame, silence
                 # included, measured the gap to the most recent silent packet
                 # and reported a meaningless single-digit millisecond figure.
-                if rms > BARGE_RMS_THRESHOLD:
+                if rms > self.barge_rms_threshold:
                     self._turn.last_speech_sent_at = time.time()
 
             elif event == "stop":

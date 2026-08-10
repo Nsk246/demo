@@ -43,6 +43,17 @@ def test_greeting_says_the_name_once():
     assert "Do not say the name twice" in agent_mod.greeting("Acme")
 
 
+def test_prompt_governs_turn_taking():
+    """On real calls the agent asked a follow-up question on nearly every
+    turn, said "is there anything else" after almost every answer, and
+    stacked two holding phrases in one turn."""
+    text = agent_mod.build(name="Acme", brief="b", crawled_at="today")
+    assert "Answer, then stop talking" in text
+    assert "They are thinking, not finished" in text
+    assert "one holding phrase per lookup" in text
+    assert "do not say it again" in text
+
+
 def test_prompt_says_what_to_do_with_an_empty_brief():
     text = agent_mod.build(name="", brief="", crawled_at="today")
     assert "lookup_site for everything" in text
@@ -188,3 +199,80 @@ def test_the_embedding_client_is_reused():
 
     assert "_CLIENTS" in inspect.getsource(embed)
     assert "genai.Client" not in inspect.getsource(embed.embed_texts)
+
+
+# --- session config -----------------------------------------------------------
+
+def _provider(**kw):
+    from app.providers.gemini import GeminiLiveProvider
+
+    return GeminiLiveProvider(api_key="k", model="m", **kw)
+
+
+def test_turn_taking_defaults_cannot_make_the_agent_deaf():
+    """prefix_padding_ms is the speech duration required before start-of-speech
+    commits, not padding around it. With LOW start sensitivity a caller
+    answering "yes" in under a third of a second can be dropped, which trades
+    an eager agent for a deaf one on the shortest turns."""
+    detection = _provider().build_config("i", [])["realtime_input_config"][
+        "automatic_activity_detection"
+    ]
+    assert "prefix_padding_ms" not in detection
+    assert "start_of_speech_sensitivity" not in detection
+
+
+def test_the_caller_can_always_interrupt():
+    realtime = _provider().build_config("i", [])["realtime_input_config"]
+    assert realtime["activity_handling"] == "START_OF_ACTIVITY_INTERRUPTS"
+
+
+def test_endpointing_is_patient_by_default():
+    """At 500ms the agent starts talking over anyone who pauses mid-sentence.
+
+    Asserts the declared default, not `Settings()`. Instantiating reads the
+    developer's own .env, so the test would pass for whoever has not set the
+    value and fail for everyone else. That is the environment-dependent test
+    that scripts/check.py exists to prevent, and it slipped in anyway.
+    """
+    from app.config import Settings
+
+    default = Settings.model_fields["gemini_end_of_speech_ms"].default
+    assert default >= 800, f"declared default is {default}"
+    detection = _provider(end_of_speech_silence_ms=900).build_config("i", [])[
+        "realtime_input_config"
+    ]["automatic_activity_detection"]
+    assert detection["silence_duration_ms"] == 900
+    assert detection["end_of_speech_sensitivity"] == "END_SENSITIVITY_LOW"
+
+
+def test_the_risky_settings_still_apply_when_asked_for():
+    detection = _provider(
+        start_of_speech_sensitivity="START_SENSITIVITY_LOW", prefix_padding_ms=200
+    ).build_config("i", [])["realtime_input_config"]["automatic_activity_detection"]
+    assert detection["start_of_speech_sensitivity"] == "START_SENSITIVITY_LOW"
+    assert detection["prefix_padding_ms"] == 200
+
+
+def test_a_bad_enum_fails_at_construction_not_on_a_call():
+    """An unrecognised value fails the handshake, and a failed handshake is a
+    silent line."""
+    with pytest.raises(ValueError, match="END_SENSITIVITY"):
+        _provider(end_of_speech_sensitivity="low")
+    with pytest.raises(ValueError, match="START_SENSITIVITY"):
+        _provider(start_of_speech_sensitivity="high")
+
+
+def test_config_still_carries_prompt_tools_and_transcription():
+    cfg = _provider().build_config("the instructions", [{"name": "lookup_site"}])
+    assert cfg["system_instruction"] == "the instructions"
+    assert cfg["tools"] == [{"function_declarations": [{"name": "lookup_site"}]}]
+    assert cfg["response_modalities"] == ["AUDIO"]
+    assert "input_audio_transcription" in cfg
+    assert "output_audio_transcription" in cfg
+
+
+def test_only_one_rule_governs_the_closing_question():
+    """Three overlapping rules is worse than one, and the third contradicted
+    the other two by telling it to ask before ending."""
+    text = agent_mod.build(name="Acme", brief="b", crawled_at="today")
+    assert text.count("anything else") == 1

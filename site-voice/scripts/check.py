@@ -106,10 +106,14 @@ def env_dependent_tests() -> list[str]:
     hits = []
     for path in TESTS.rglob("*.py"):
         source = path.read_text()
-        if "importlib.reload" in source and "config" in source:
-            for i, line in enumerate(source.splitlines()):
-                if "importlib.reload" in line:
-                    hits.append(f"{path.relative_to(ROOT)}:{i + 1}")
+        for i, line in enumerate(source.splitlines(), 1):
+            if "importlib.reload" in line and "config" in source:
+                hits.append(f"{path.relative_to(ROOT)}:{i}")
+            # Instantiating Settings() reads the developer's .env, so any
+            # assertion on the result passes for whoever has not set that
+            # value and fails for everyone else. Assert model_fields defaults.
+            if "Settings()." in line and "assert" in line:
+                hits.append(f"{path.relative_to(ROOT)}:{i} asserts on Settings()")
     return hits
 
 

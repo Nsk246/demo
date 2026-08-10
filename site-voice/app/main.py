@@ -106,6 +106,9 @@ def build_provider():
         voice=settings.gemini_voice,
         thinking_level=settings.gemini_thinking_level,
         end_of_speech_silence_ms=settings.gemini_end_of_speech_ms,
+        end_of_speech_sensitivity=settings.gemini_end_of_speech_sensitivity,
+        start_of_speech_sensitivity=settings.gemini_start_of_speech_sensitivity,
+        prefix_padding_ms=settings.gemini_prefix_padding_ms,
     )
 
 
@@ -229,6 +232,8 @@ async def twilio_stream(ws: WebSocket, call_id: str):
         dispatch_tool=dispatcher.dispatch if dispatcher else None,
         tool_timeout_ms=settings.tool_timeout_ms,
         stall_after_ms=settings.stall_after_ms,
+        barge_rms_threshold=settings.barge_rms_threshold,
+        barge_sustain_frames=settings.barge_sustain_frames,
         # Two connect attempts with a pause between them do not fit in ten
         # seconds, and a timeout here cancels the retry that would have worked.
         connect_timeout_s=20.0,
