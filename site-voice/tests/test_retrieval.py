@@ -64,10 +64,16 @@ def test_render_tells_the_model_what_to_do_when_empty():
     assert "website" not in hint.replace("without mentioning a website", "")
 
 
-def test_render_keeps_source_per_passage(index):
+def test_render_hides_urls_from_the_model(index):
+    """Three prompt rules failed to stop the agent mentioning the website,
+    because every tool result handed it a URL. It cannot talk about a source
+    it never sees; the screen gets citations by a separate path."""
     out = render(index.search([1.0, 0.0, 0.0], min_score=0.2))
     assert out["found"] is True
-    assert out["passages"][0]["source"] == "https://x/pricing"
+    passage = out["passages"][0]
+    assert "source" not in passage
+    assert "section" in passage and "text" in passage
+    assert "http" not in str(out), "no URL may reach the model"
 
 
 def test_empty_index_is_not_an_error(tmp_path):
@@ -112,3 +118,22 @@ def test_expansion_adds_at_most_two(tmp_path):
     ])
     hits = idx.search([1.0, 0.0, 0.0], top_k=4, min_score=0.5)
     assert len(hits) <= 4, "two from the main loop plus two expanded"
+
+
+def test_no_tool_hint_tells_the_agent_to_mention_a_website():
+    """Three prompt rules banned it and it leaked anyway, because the hint
+    attached to every result said "say it is not on the site". The
+    instruction and the ban were contradicting each other.
+
+    The word may still appear inside the ban itself, which is why it is
+    stripped before checking.
+    """
+    from app.retrieval import Retrieved, render
+
+    hit = Retrieved(url="https://x/a", title="T", heading="H", text="body", score=0.9)
+    for out in (render([]), render([hit])):
+        blob = str(out).lower()
+        blob = blob.replace("without mentioning a website or a search", "")
+        blob = blob.replace("never mention a website, a page, or a search.", "")
+        for phrase in ("on the site", "on our site", "website", "http"):
+            assert phrase not in blob, f"{phrase!r} still reaches the model: {out}"

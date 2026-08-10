@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import contextlib
+import asyncio
 import json
 import logging
 import pathlib
@@ -206,9 +207,11 @@ async def twilio_stream(ws: WebSocket, call_id: str):
             _monitors.get("*", set()).difference_update(dead)
 
     def note_sources(urls: list[str]):
-        for url in urls:
-            if url not in sources:
-                sources.append(url)
+        fresh = [u for u in urls if u not in sources]
+        sources.extend(fresh)
+        if fresh:
+            # The screen needs the citations; the model must never see them.
+            asyncio.create_task(fan_out({"type": "sources", "urls": fresh}))
 
     dispatcher = None
     tools: list[dict] = []

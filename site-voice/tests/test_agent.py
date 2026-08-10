@@ -114,8 +114,9 @@ async def test_a_hit_reports_its_source(index, monkeypatch):
     d = agent_mod.ToolDispatcher(index=index, settings=Settings(), on_sources=seen.extend)
     out = await d.dispatch("lookup_site", {"question": "how much"})
     assert out["found"] is True
-    assert out["passages"][0]["source"] == "https://x/pricing"
+    # The citation reaches the screen through on_sources, never the model.
     assert seen == ["https://x/pricing"]
+    assert "http" not in str(out)
 
 
 @pytest.mark.asyncio
@@ -177,7 +178,7 @@ async def test_a_slow_lookup_is_never_reported_as_not_on_the_site():
     result = provider.tool_results[0]["result"]
     assert result["error"] == "timeout"
     assert "found" not in result, "a timeout must not look like a miss"
-    assert "not on the site" in result["hint"]
+    assert "do not have the information" in result["hint"]
 
 
 def test_a_query_embed_cannot_sleep_longer_than_the_tool_budget():
@@ -294,7 +295,7 @@ def test_the_website_is_never_mentioned_aloud():
     receptionist knows things or does not; they do not narrate where they
     read it. The screen already shows the source."""
     text = agent_mod.build(name="Acme", brief="b", crawled_at="today")
-    assert "Never mention the website" in text
+    assert "Never mention a website" in text
     assert "I don't have that to hand" in text
     for line in text.split("\n"):
         if "Never mention" in line:

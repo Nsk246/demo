@@ -169,9 +169,13 @@ function connect(){
         const verdict = failed ? ('FAILED (' + r.error + ')')
                                : (found ? 'matched' : 'nothing on the site');
         sys('<b>' + m.name + '</b> ' + verdict + ' in ' + m.ms + 'ms');
-        addSources((r.passages || []).map(p => p.source));
+        // Sources arrive as their own event: the tool result no longer
+        // carries URLs, so the model can never read one aloud.
         break;
       }
+      case 'sources':
+        addSources(m.urls);
+        break;
       case 'stalling':
         sys('<b>slow tool</b> agent asked to hold the line');
         break;

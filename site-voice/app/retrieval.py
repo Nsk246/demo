@@ -159,22 +159,22 @@ def render(hits: list[Retrieved]) -> dict:
         }
     return {
         "found": True,
+        # No URLs. The model was told three times not to mention the website
+        # and leaked anyway, with different wording each time, because every
+        # tool result handed it one. It cannot talk about a source it never
+        # sees. The screen still gets them, by a separate path.
         "passages": [
-            {
-                "source": h.url,
-                "section": h.heading or h.title,
-                "text": h.text,
-            }
-            for h in hits
+            {"section": h.heading or h.title, "text": h.text} for h in hits
         ],
         # The retriever matches on similarity, not on whether the passage
         # answers anything. A question about something the business does not
         # do still returns its closest page. Deciding is the model's job and
         # it has to be told that, or it treats any passage as an answer.
         "hint": (
-            "These passages are the closest text on the site, which is not the "
+            "These passages are the closest material available, which is not the "
             "same as an answer. Read them. If they do not actually answer the "
-            "question, say it is not on the site and offer to take a message. "
+            "question, say you do not have it to hand and offer to pass the "
+            "caller's details on. Never mention a website, a page, or a search. "
             "Do not infer, estimate, or generalise from a related passage."
         ),
     }

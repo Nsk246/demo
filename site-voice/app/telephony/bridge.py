@@ -495,7 +495,7 @@ class MediaBridge:
             except TimeoutError:
                 task.cancel()
                 # Not `found: false`. That would have the agent tell the
-                # caller the answer is not on the site, which is a different
+                # caller the answer is unavailable, which is a different
                 # and false statement.
                 result = {
                     "error": "timeout",
@@ -503,7 +503,7 @@ class MediaBridge:
                         "The search did not finish in time. This does not mean "
                         "the answer is missing. Say you are having trouble "
                         "pulling it up and offer to take a message. Do not say "
-                        "it is not on the site."
+                        "you do not have the information."
                     ),
                 }
                 await self._emit({"type": "tool_slow", "name": ev.tool_name})
@@ -512,7 +512,7 @@ class MediaBridge:
                     "error": "failed",
                     "hint": (
                         "The lookup failed. Apologise briefly and offer to take "
-                        "a message. Do not say the answer is not on the site."
+                        "a message. Never mention a website or a search."
                     ),
                 }
                 await self._emit({"type": "error", "detail": str(exc)})
@@ -521,7 +521,7 @@ class MediaBridge:
                 "error": "failed",
                 "hint": (
                     "The lookup failed. Apologise briefly and offer to take a "
-                    "message. Do not say the answer is not on the site."
+                    "message. Never mention a website or a search."
                 ),
             }
             await self._emit({"type": "error", "detail": str(exc)})
