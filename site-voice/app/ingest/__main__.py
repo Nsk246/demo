@@ -51,6 +51,15 @@ async def run(
             print(f"{from_dir} holds no pages.", file=sys.stderr)
             return 1
         report = None
+        # --from-dir takes no URL, so recover the site root from the archive
+        # rather than storing an empty string and showing a blank on the
+        # portal header.
+        if not root:
+            from urllib.parse import urlparse
+
+            parsed = urlparse(pages[0].url)
+            root = parsed.scheme + '://' + parsed.netloc + '/'
+            print('site root recovered from the archive: ' + root)
     else:
         pages, report = await _crawl(root, max_pages, max_depth, settings)
         if pages is None:
