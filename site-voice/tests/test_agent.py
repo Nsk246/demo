@@ -19,11 +19,15 @@ def test_prompt_states_the_crawl_date_and_the_current_time():
     assert "Acme roofs things." in text
 
 
-def test_prompt_forbids_inventing_times():
-    """On a real call the agent answered "open until seven PM on Saturdays"
-    for a site that publishes no hours at all."""
+def test_prompt_grounds_facts_without_claiming_what_is_missing():
+    """The rule must be "check you can point to it", not "you do not know
+    hours". Asserting a category is absent is a claim about one site, and it
+    was wrong: rxiedu publishes campus hours on its location pages. A prompt
+    that denies them makes the agent refuse questions it can answer."""
     text = agent_mod.build(name="Acme", brief="b", crawled_at="today")
-    assert "you are inventing it" in text
+    assert "check that you can point to it" in text
+    assert "probably charges" in text
+    assert "NOT in your summary" not in text
     assert "While a lookup is running you do not have the answer" in text
 
 
