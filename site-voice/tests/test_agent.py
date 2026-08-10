@@ -1,4 +1,6 @@
 """Prompt assembly and tool dispatch."""
+import asyncio
+
 import pytest
 
 from app import agent as agent_mod
@@ -39,7 +41,7 @@ class Settings:
     embedding_dims = 3
     top_k = 4
     min_score = 0.5
-    min_z = 0.0  # tiny fixture corpus; the gate is not what is under test
+    min_z = 0.0  # tiny fixture corpus, the distribution gate is not the subject
 
 
 @pytest.fixture()
@@ -108,3 +110,57 @@ def test_provided_facts_are_labelled_as_not_from_the_website():
 def test_no_facts_means_no_dangling_header():
     text = agent_mod.build(name="Acme", brief="b", crawled_at="today", facts="")
     assert "FACTS THE BUSINESS PROVIDED" not in text
+
+
+@pytest.mark.asyncio
+async def test_a_slow_lookup_is_never_reported_as_not_on_the_site():
+    """A timeout and a genuine miss are different statements to a caller.
+
+    On a real call every lookup timed out at exactly 2500ms and the agent
+    told the caller the answer was not on the site. It was; the search never
+    finished.
+    """
+    from app.providers.base import ProviderEvent
+    from app.providers.mock import MockProvider
+    from app.telephony.bridge import MediaBridge
+    from tests.test_bridge import STOP, FakeTwilioWS, media_msg, quiet, start_msg
+
+    ws = FakeTwilioWS([start_msg()] + [media_msg(quiet()) for _ in range(40)] + [STOP])
+    provider = MockProvider(
+        [ProviderEvent(kind="tool_call", tool_call_id="fc1",
+                       tool_name="lookup_site", tool_args={"question": "price"})]
+    )
+
+    async def never(name, args):
+        await asyncio.sleep(30)
+
+    bridge = MediaBridge(ws, provider, dispatch_tool=never, stall_after_ms=40,
+                         tool_timeout_ms=120)
+    await asyncio.wait_for(bridge.run(), timeout=5)
+
+    result = provider.tool_results[0]["result"]
+    assert result["error"] == "timeout"
+    assert "found" not in result, "a timeout must not look like a miss"
+    assert "not on the site" in result["hint"]
+
+
+def test_a_query_embed_cannot_sleep_longer_than_the_tool_budget():
+    """Ingest can afford exponential backoff. A caller on the line cannot."""
+    import inspect
+
+    from app import embed
+
+    src = inspect.getsource(embed.embed_query)
+    assert "attempts=2" in src
+    assert "backoff_base=0.25" in src
+
+
+def test_the_embedding_client_is_reused():
+    """Building a genai.Client does a TLS handshake. Doing that per lookup
+    spent most of the tool budget before the request was sent."""
+    import inspect
+
+    from app import embed
+
+    assert "_CLIENTS" in inspect.getsource(embed)
+    assert "genai.Client" not in inspect.getsource(embed.embed_texts)

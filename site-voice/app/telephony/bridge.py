@@ -430,13 +430,36 @@ class MediaBridge:
                 result = await asyncio.wait_for(task, timeout=remaining)
             except TimeoutError:
                 task.cancel()
-                result = {"error": "that is taking too long, offer to call them back"}
+                # Not `found: false`. That would have the agent tell the
+                # caller the answer is not on the site, which is a different
+                # and false statement.
+                result = {
+                    "error": "timeout",
+                    "hint": (
+                        "The search did not finish in time. This does not mean "
+                        "the answer is missing. Say you are having trouble "
+                        "pulling it up and offer to take a message. Do not say "
+                        "it is not on the site."
+                    ),
+                }
                 await self._emit({"type": "tool_slow", "name": ev.tool_name})
             except Exception as exc:
-                result = {"error": "something went wrong on our end"}
+                result = {
+                    "error": "failed",
+                    "hint": (
+                        "The lookup failed. Apologise briefly and offer to take "
+                        "a message. Do not say the answer is not on the site."
+                    ),
+                }
                 await self._emit({"type": "error", "detail": str(exc)})
         except Exception as exc:
-            result = {"error": "something went wrong on our end"}
+            result = {
+                "error": "failed",
+                "hint": (
+                    "The lookup failed. Apologise briefly and offer to take a "
+                    "message. Do not say the answer is not on the site."
+                ),
+            }
             await self._emit({"type": "error", "detail": str(exc)})
 
         took = int((time.time() - started) * 1000)

@@ -62,7 +62,7 @@ const statsEl = document.getElementById('stats');
 const dot = document.getElementById('dot');
 
 let cleared = false, current = null, currentRole = null, seen = new Set();
-const stats = {latency: [], lookups: 0, misses: 0, barge: 0};
+const stats = {latency: [], lookups: 0, misses: 0, failures: 0, barge: 0};
 
 const clearOnce = () => { if (!cleared) { feed.innerHTML = ''; cleared = true; } };
 const atBottom = () => feed.scrollHeight - feed.scrollTop - feed.clientHeight < 80;
@@ -116,6 +116,7 @@ function renderStats(){
     ['median response', med(stats.latency) ? med(stats.latency) + ' ms' : '—'],
     ['lookups', stats.lookups],
     ['not on the site', stats.misses],
+    ['lookup failures', stats.failures],
     ['barge-ins', stats.barge],
   ];
   statsEl.innerHTML = rows.map(([k,v]) =>
@@ -136,7 +137,8 @@ function connect(){
       case 'call_started':
         cleared = false; feed.innerHTML = ''; closeTurn();
         seen = new Set(); sourcesEl.innerHTML = '<div class="empty">None yet.</div>';
-        stats.latency = []; stats.lookups = 0; stats.misses = 0; stats.barge = 0;
+        stats.latency = []; stats.lookups = 0; stats.misses = 0;
+        stats.failures = 0; stats.barge = 0;
         renderStats();
         sys('<b>call started</b> from ' + (m.from || 'unknown'));
         break;
@@ -155,11 +157,18 @@ function connect(){
         break;
       case 'tool_result': {
         const r = m.result || {};
-        const found = r.found !== false && !r.error;
-        if (m.name === 'lookup_site') { stats.lookups++; if (!found) stats.misses++; }
+        const failed = !!r.error;
+        const found = r.found !== false && !failed;
+        if (m.name === 'lookup_site') {
+          stats.lookups++;
+          if (failed) stats.failures++; else if (!found) stats.misses++;
+        }
         renderStats();
-        sys('<b>' + m.name + '</b> ' + (found ? 'matched' : 'nothing on the site') +
-            ' in ' + m.ms + 'ms');
+        // A failed lookup is not the same as a question the site does not
+        // answer, and showing them alike hides a real fault during a demo.
+        const verdict = failed ? ('FAILED (' + r.error + ')')
+                               : (found ? 'matched' : 'nothing on the site');
+        sys('<b>' + m.name + '</b> ' + verdict + ' in ' + m.ms + 'ms');
         addSources((r.passages || []).map(p => p.source));
         break;
       }

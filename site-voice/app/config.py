@@ -61,16 +61,17 @@ class Settings(BaseSettings):
     # off-topic questions with whatever chunk scored highest.
     top_k: int = 4
     min_score: float = 0.58
-    # Off. A distribution-relative gate measured worse than the raw
-    # score on real data, rejecting good questions more often than bad
-    # ones. Kept as a diagnostic that eval prints. See the note in
-    # retrieval.Index.search.
+    # Off. A distribution-relative gate measured worse than the raw score on
+    # real data, rejecting good questions more often than bad ones. Kept as a
+    # diagnostic that eval prints. See the note in retrieval.Index.search.
     min_z: float = 0.0
 
-    # A lookup is an embed call plus a matrix multiply. The embed call is the
-    # whole cost, and it is well under the bridge's 450ms stall threshold on a
-    # good connection, so most lookups never trigger a holding phrase.
-    tool_timeout_ms: int = 2500
+    # A lookup is an embed call plus a matrix multiply, and the embed call is
+    # the whole cost. Measured on a real call, 2500ms was not enough and every
+    # lookup timed out: the client was rebuilt per request and the retry
+    # backoff alone exceeded the budget. Both are fixed, but the ceiling stays
+    # generous because a slow answer beats a wrong one.
+    tool_timeout_ms: int = 8000
     max_call_seconds: int = 600
 
     max_pages: int = 120
