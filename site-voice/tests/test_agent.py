@@ -50,7 +50,7 @@ def test_prompt_governs_turn_taking():
     text = agent_mod.build(name="Acme", brief="b", crawled_at="today")
     assert "Answer, then stop talking" in text
     assert "They are thinking, not finished" in text
-    assert "one holding phrase per lookup" in text
+    assert "Do not narrate a lookup" in text
     assert "do not say it again" in text
 
 
@@ -271,8 +271,21 @@ def test_config_still_carries_prompt_tools_and_transcription():
     assert "output_audio_transcription" in cfg
 
 
-def test_only_one_rule_governs_the_closing_question():
-    """Three overlapping rules is worse than one, and the third contradicted
-    the other two by telling it to ask before ending."""
+def test_the_closing_question_is_forbidden_outright():
+    """Conditional wording was obeyed about half the time: the agent still
+    asked twice in a five-turn call. A flat prohibition is easier to follow
+    and shorter to state."""
     text = agent_mod.build(name="Acme", brief="b", crawled_at="today")
+    assert "Never ask if there is anything else" in text
     assert text.count("anything else") == 1
+
+
+def test_follow_up_questions_are_forbidden_outright():
+    text = agent_mod.build(name="Acme", brief="b", crawled_at="today")
+    assert "Do not ask a follow-up question after answering" in text
+
+
+def test_prices_must_carry_their_unit():
+    """It said "one hundred fifty nine per week", dropping the currency."""
+    text = agent_mod.build(name="Acme", brief="b", crawled_at="today")
+    assert "always include the unit" in text

@@ -3,8 +3,11 @@
   "build": { "builder": "DOCKERFILE", "dockerfilePath": "Dockerfile" },
   "deploy": {
     "healthcheckPath": "/health",
-    "healthcheckTimeout": 30,
+    "healthcheckTimeout": 120,
     "restartPolicyType": "ON_FAILURE",
-    "numReplicas": 1
+    "restartPolicyMaxRetries": 3,
+    "multiRegionConfig": {
+      "us-east4-eqdc4a": { "numReplicas": 1 }
+    }
   }
 }
