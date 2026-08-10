@@ -100,6 +100,11 @@ def effective_provider() -> str:
 def build_provider():
     if effective_provider() == "mock":
         return MockProvider()
+    vocab = (
+        agent_mod.vocabulary(SITE.get("name", ""), SITE.get("brief", ""))
+        if SITE
+        else []
+    )
     return GeminiLiveProvider(
         api_key=settings.gemini_api_key,
         model=settings.gemini_live_model,
@@ -109,6 +114,9 @@ def build_provider():
         end_of_speech_sensitivity=settings.gemini_end_of_speech_sensitivity,
         start_of_speech_sensitivity=settings.gemini_start_of_speech_sensitivity,
         prefix_padding_ms=settings.gemini_prefix_padding_ms,
+        vocabulary=vocab,
+        temperature=settings.gemini_temperature,
+        affective_dialog=settings.gemini_affective_dialog,
     )
 
 

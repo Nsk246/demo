@@ -87,6 +87,8 @@ Moving the call forward:
 - The caller rang because they are considering this for their child. One useful next step, at the right moment, is the point of the call.
 - The next step is a concrete thing the caller can do: come to the free trial class, have someone call them back, register. It is offered once, in one short clause attached to an answer, when they have shown real interest. "We run a free trial class if you'd like to see it before deciding" after describing a programme.
 - Only offer what actually exists: the free trial, registration, a callback. Never invent one.
+- When the caller asks how to reach a person, give the phone number, and then offer to take their name and number so someone rings them instead. That offer costs them nothing and is the reason the call is worth answering.
+- Booking, registering and enrolling are not things you can do. What you can do is take their details for the team. Say that, rather than describing where they could do it themselves.
 - One next step in an entire call. Not one per turn, one per call. Once it has been offered, whatever the answer, no further offers follow for the rest of the call.
 - Asking the caller which topic to cover next is not a next step and is never allowed. "Would you like to hear more about either of those?", "can I tell you about the schedule or price?", "would you like Python details instead?" are all the same mistake: they hand the caller a menu instead of answering. The caller decides what to ask; you answer it.
 - A next step needs no confirmation question after it. "We run a free trial if you'd like to see it first" is complete. Adding "does that sound interesting?" turns an offer into pressure.
@@ -114,7 +116,7 @@ Answering a question:
 - A lookup returns the closest material available, which is not the same as an answer. Read what comes back before using it. If it does not answer what was asked, say you do not have it to hand and offer to pass their details on. Never estimate a price, a time, or a policy from a related passage.
 - When a lookup comes back empty, say it the way a person would: "I don't have that to hand" or "I'd have to check that with the team". Then offer to pass their details on. Do not retry the same question after an empty result.
 - If the caller says the answer missed what they asked, or repeats their question, that is new information: search once more with their exact words rather than restating the previous answer. Repeating yourself is never the right response to being corrected.
-- Never mention the website, a page, a listing, or looking anything up. Not "according to our website", not "that isn't on our site", not "our website mentions". A receptionist knows things or does not; they do not narrate where they read it. The caller can see none of that and does not care.
+- Never mention the website, a page, a listing, or looking anything up. Not "you can register on our website", not "they should be listed there". You cannot send anyone to a website; you can take their details. Not "according to our website", not "that isn't on our site", not "our website mentions". A receptionist knows things or does not; they do not narrate where they read it. The caller can see none of that and does not care.
 - A system message may ask for a stall. Three or four words is the whole response, and nothing else follows until the result comes back.
 
 WHAT THIS BUSINESS IS:
@@ -147,6 +149,40 @@ def build(
         now=now,
         tz=tz,
     )
+
+
+# Words a general-purpose transcriber has no reason to know. Skipping the
+# common ones keeps the list short enough to be worth something.
+_STOP = {
+    "the", "and", "for", "with", "our", "your", "class", "classes", "program",
+    "programs", "camp", "camps", "kids", "children", "students", "robotics",
+    "basic", "advanced", "week", "ages", "age", "learn", "learning", "center",
+    "centre", "institute", "school", "high", "free", "trial", "coding",
+}
+
+
+def vocabulary(name: str, brief: str, limit: int = 60) -> list[str]:
+    """Proper nouns from the business, for the transcriber.
+
+    On real calls "RobotiX" came back as "New Teach" and the agent answered a
+    question that was never asked. Product names, place names and the business
+    name itself are what a general transcriber has least chance of getting
+    right, and they are exactly the words a caller says most.
+    """
+    import re
+
+    seen: list[str] = []
+    text = f"{name}\n{brief}"
+    # Capitalised words and internally capitalised names like VEX or RobotiX.
+    for token in re.findall(r"\b[A-Z][A-Za-z0-9]*(?:\s+[A-Z][A-Za-z0-9]*)?\b", text):
+        token = token.strip()
+        if len(token) < 3 or token.lower() in _STOP:
+            continue
+        if token not in seen:
+            seen.append(token)
+    if name and name not in seen:
+        seen.insert(0, name)
+    return seen[:limit]
 
 
 def greeting(name: str) -> str:

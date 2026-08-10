@@ -78,8 +78,20 @@ async def probe(model: str, timeout: float) -> int:
     print(f"end sens : {settings.gemini_end_of_speech_sensitivity or 'API default'}")
     print(f"start sen: {settings.gemini_start_of_speech_sensitivity or 'API default'}")
     print(f"prefix   : {settings.gemini_prefix_padding_ms or 'API default'}")
+    print(f"voice    : {settings.gemini_voice}")
+    print(f"temp     : {settings.gemini_temperature if settings.gemini_temperature is not None else 'API default'}")
+    print(f"affective: {settings.gemini_affective_dialog}")
     print(f"prompt   : {len(instructions)} chars (~{len(instructions) // 4} tokens)")
     print(f"tools    : {len(tools)}")
+
+    from app import agent as agent_mod
+    from app.store import connect, site_row
+
+    row = site_row(connect(settings.site_db))
+    vocab = (
+        agent_mod.vocabulary(row["name"], row["brief"]) if row is not None else []
+    )
+    print(f"vocab    : {len(vocab)} phrases {vocab[:6]}")
 
     provider = GeminiLiveProvider(
         api_key=key,
@@ -87,6 +99,12 @@ async def probe(model: str, timeout: float) -> int:
         voice=settings.gemini_voice,
         thinking_level=settings.gemini_thinking_level,
         end_of_speech_silence_ms=settings.gemini_end_of_speech_ms,
+        end_of_speech_sensitivity=settings.gemini_end_of_speech_sensitivity,
+        start_of_speech_sensitivity=settings.gemini_start_of_speech_sensitivity,
+        prefix_padding_ms=settings.gemini_prefix_padding_ms,
+        vocabulary=vocab,
+        temperature=settings.gemini_temperature,
+        affective_dialog=settings.gemini_affective_dialog,
     )
 
     # Print what will actually be sent. A turn-taking setting that silently

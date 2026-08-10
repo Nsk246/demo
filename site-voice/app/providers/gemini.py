@@ -32,6 +32,9 @@ class GeminiLiveProvider:
         end_of_speech_sensitivity: str = "END_SENSITIVITY_LOW",
         start_of_speech_sensitivity: str = "",
         prefix_padding_ms: int = 0,
+        vocabulary: list[str] | None = None,
+        temperature: float | None = None,
+        affective_dialog: bool = False,
     ):
         self.api_key = api_key
         self.model = model
@@ -45,6 +48,9 @@ class GeminiLiveProvider:
         self.end_of_speech_sensitivity = end_of_speech_sensitivity
         self.start_of_speech_sensitivity = start_of_speech_sensitivity
         self.prefix_padding_ms = prefix_padding_ms
+        self.vocabulary = list(vocabulary or [])[:100]
+        self.temperature = temperature
+        self.affective_dialog = affective_dialog
         self._validate()
         self._session = None
         self._ctx = None
@@ -120,9 +126,26 @@ class GeminiLiveProvider:
             "speech_config": {
                 "voice_config": {"prebuilt_voice_config": {"voice_name": self.voice}}
             },
-            "input_audio_transcription": {},
+            # Words the transcriber will otherwise mangle. On real calls
+            # "RobotiX" came back as "New Teach" and "7th grader" as "207
+            # grader", and the agent then answered a question nobody asked.
+            # These are the business's own proper nouns, so they are exactly
+            # what the model has least chance of guessing.
+            "input_audio_transcription": (
+                {"adaptation_phrases": self.vocabulary} if self.vocabulary else {}
+            ),
             "output_audio_transcription": {},
         }
+        if self.temperature is not None:
+            # Higher is less flat and more varied in phrasing. Too high and it
+            # starts embellishing facts, which matters more here than sounding
+            # lively, so this stays conservative.
+            config["temperature"] = self.temperature
+        if self.affective_dialog:
+            # Lets the model read and match the caller's tone. Supported on
+            # native-audio models; on others the session may refuse to open,
+            # which is why it is off unless asked for.
+            config["enable_affective_dialog"] = True
         if tools:
             config["tools"] = [{"function_declarations": tools}]
         if self.thinking_level:

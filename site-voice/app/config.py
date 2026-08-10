@@ -64,6 +64,13 @@ class Settings(BaseSettings):
     # Try it only if client-side barge-in alone is not fast enough.
     gemini_start_of_speech_sensitivity: str = ""
     gemini_prefix_padding_ms: int = 0
+    # Higher reads as less flat and more varied. Too high and it embellishes
+    # facts, which matters more here than sounding lively. None leaves the
+    # model's own default.
+    gemini_temperature: float | None = None
+    # Lets the model read and match the caller's tone. Native-audio models
+    # only; elsewhere the session may refuse to open, so it is opt-in.
+    gemini_affective_dialog: bool = False
     gemini_voice: str = "Aoede"
     gemini_text_model: str = "gemini-2.5-flash"
 

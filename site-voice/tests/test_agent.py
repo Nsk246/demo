@@ -356,3 +356,30 @@ def test_a_correction_from_the_caller_permits_another_search():
     text = agent_mod.build(name="Acme", brief="b", crawled_at="today")
     assert "search once more with their exact words" in text
     assert "Repeating yourself is never the right response to being corrected" in text
+
+
+def test_vocabulary_pulls_the_names_a_transcriber_will_mangle():
+    """"RobotiX" came back as "New Teach" on a real call and the agent
+    answered a question nobody asked."""
+    v = agent_mod.vocabulary(
+        "RobotiX Institute",
+        "Teaches LEGO Robotics and VEX IQ in Brentwood and Murfreesboro, Tennessee.",
+    )
+    assert "RobotiX Institute" in v
+    assert "Brentwood" in v
+    assert "Murfreesboro" in v
+    # Common words carry no information and crowd the list.
+    assert not any(w.lower() in {"the", "robotics", "class"} for w in v)
+
+
+def test_vocabulary_is_bounded():
+    v = agent_mod.vocabulary("X", " ".join(f"Name{i}" for i in range(200)))
+    assert len(v) <= 60
+
+
+def test_the_agent_offers_to_take_details_rather_than_pointing_at_a_website():
+    """It said "you can register on our website" and never offered a callback,
+    even when the caller asked how to reach a person."""
+    text = agent_mod.build(name="Acme", brief="b", crawled_at="today")
+    assert "offer to take their name and number" in text
+    assert "Booking, registering and enrolling are not things you can do" in text
