@@ -94,7 +94,17 @@ class GeminiLiveProvider:
         # than surfacing a bare 404 from deep in the SDK.
         detail = f"{type(last).__name__}: {last}"
         hint = ""
-        if "429" in detail or "RESOURCE_EXHAUSTED" in detail.upper():
+        if "1011" in detail and self.affective_dialog:
+            # Measured on gemini-3.1-flash-live-preview: enabling affective
+            # dialog fails the handshake with a bare internal error rather
+            # than saying the option is unsupported.
+            hint = (
+                " GEMINI_AFFECTIVE_DIALOG is on and this model does not "
+                "support it. The handshake fails with a bare internal error "
+                "rather than naming the option. Turn it off, or move to a "
+                "native-audio model."
+            )
+        elif "429" in detail or "RESOURCE_EXHAUSTED" in detail.upper():
             hint = (
                 " This is a quota error, not a code problem. The Live API "
                 "limits concurrent sessions by usage tier and the free tier "

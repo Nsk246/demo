@@ -26,17 +26,19 @@ def test_prompt_grounds_facts_without_claiming_what_is_missing():
     was wrong: rxiedu publishes campus hours on its location pages. A prompt
     that denies them makes the agent refuse questions it can answer."""
     text = agent_mod.build(name="Acme", brief="b", crawled_at="today")
-    assert "check that you can point to it" in text
+    assert "check you can point to it" in text
     assert "probably charges" in text
     assert "NOT in your summary" not in text
-    assert "the answer is not available yet" in text
+    assert "say nothing until the result arrives" in text
 
 
 def test_prompt_never_refers_to_the_business_in_third_person():
     """It regressed to "they offer" on turns answered from the summary."""
     text = agent_mod.build(name="Acme", brief="b", crawled_at="today")
-    assert "'We teach ages four to fourteen'" in text
-    assert "on their pricing page" not in text
+    assert "Always we, us, our" in text
+    # The word appears inside the ban itself, so check the ban is stated
+    # rather than that the word is absent.
+    assert "Never they or their about this business" in text
 
 
 def test_greeting_says_the_name_once():
@@ -50,9 +52,9 @@ def test_prompt_governs_turn_taking():
     stacked two holding phrases in one turn."""
     text = agent_mod.build(name="Acme", brief="b", crawled_at="today")
     assert "A turn ends once the answer is given" in text
-    assert "still thinking, not that they have finished" in text
-    assert "A lookup is never narrated" in text
-    assert "do not say it again" in text
+    assert "still thinking" in text
+    assert "say nothing until the result arrives" in text
+    assert "Do not repeat something already said" in text
 
 
 def test_prompt_says_what_to_do_with_an_empty_brief():
@@ -286,7 +288,7 @@ def test_topic_menus_are_banned_but_a_real_next_step_is_not():
     """On a real call it asked "would you like Python details instead?" when
     the caller had asked about LEGO. Handing over a menu is not an offer."""
     text = agent_mod.build(name="Acme", brief="b", crawled_at="today")
-    assert "is not a next step and is never allowed" in text
+    assert "hand the caller a menu instead of an answer" in text
     assert "free trial class if you" in text
 
 
@@ -296,7 +298,7 @@ def test_the_website_is_never_mentioned_aloud():
     read it. The screen already shows the source."""
     text = agent_mod.build(name="Acme", brief="b", crawled_at="today")
     assert "Never mention a website" in text
-    assert "I don't have that to hand" in text
+    assert "do not have it to hand" in text
     for line in text.split("\n"):
         if "Never mention" in line:
             continue
@@ -308,17 +310,17 @@ def test_one_next_step_per_call():
     and the failure mode of forgetting is silence, not pestering."""
     text = agent_mod.build(name="Acme", brief="b", crawled_at="today")
     assert "One next step in an entire call" in text
-    assert "no further offers follow for the rest of the call" in text
+    assert "no further offers" in text
 
 
 def test_an_offer_needs_no_confirmation_question():
     text = agent_mod.build(name="Acme", brief="b", crawled_at="today")
-    assert "needs no confirmation question" in text
+    assert "No confirmation question after it" in text
 
 
 def test_offers_must_be_real():
     text = agent_mod.build(name="Acme", brief="b", crawled_at="today")
-    assert "Never invent one" in text
+    assert "Never invented, never a menu" in text
 
 
 def test_factual_runs_do_not_get_offers():
@@ -329,7 +331,7 @@ def test_factual_runs_do_not_get_offers():
 def test_prices_must_carry_their_unit():
     """It said "one hundred fifty nine per week", dropping the currency."""
     text = agent_mod.build(name="Acme", brief="b", crawled_at="today")
-    assert "with the unit included" in text
+    assert "Numbers as words with the unit" in text
 
 
 def test_no_instruction_can_be_read_out_as_a_line():
@@ -342,7 +344,7 @@ def test_no_instruction_can_be_read_out_as_a_line():
     text = agent_mod.build(name="Acme", brief="b", crawled_at="today")
     for line in text.split("\n"):
         assert not re.search(r"(^|\. )(wait|stop|spell out)\b", line, re.I), line
-    assert "None of their\nwording is ever spoken aloud" in text
+    assert "None of their wording is ever spoken" in text
 
 
 def test_contact_details_are_spoken_character_by_character():
@@ -367,15 +369,19 @@ def test_vocabulary_pulls_the_names_a_transcriber_will_mangle():
         "Teaches LEGO Robotics and VEX IQ in Brentwood and Murfreesboro, Tennessee.",
     )
     assert "RobotiX Institute" in v
-    assert "Brentwood" in v
-    assert "Murfreesboro" in v
+    # Place names may arrive as part of a longer proper noun.
+    joined = " ".join(v)
+    assert "Brentwood" in joined
+    assert "Murfreesboro" in joined
     # Common words carry no information and crowd the list.
-    assert not any(w.lower() in {"the", "robotics", "class"} for w in v)
+    assert not any(w.lower() in {"the", "robotics", "class", "locations"} for w in v)
+    # Half a street address teaches the transcriber nothing.
+    assert not any("Patton" in w or " Dr" in w for w in v)
 
 
 def test_vocabulary_is_bounded():
-    v = agent_mod.vocabulary("X", " ".join(f"Name{i}" for i in range(200)))
-    assert len(v) <= 60
+    v = agent_mod.vocabulary("X", " ".join(f"NameX{i}" for i in range(200)))
+    assert len(v) <= 30
 
 
 def test_the_agent_offers_to_take_details_rather_than_pointing_at_a_website():
@@ -383,4 +389,4 @@ def test_the_agent_offers_to_take_details_rather_than_pointing_at_a_website():
     even when the caller asked how to reach a person."""
     text = agent_mod.build(name="Acme", brief="b", crawled_at="today")
     assert "offer to take their name and number" in text
-    assert "Booking, registering and enrolling are not things you can do" in text
+    assert "cannot book, register, enrol" in text
