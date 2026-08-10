@@ -112,9 +112,17 @@ def build_provider():
 @app.get("/health")
 async def health():
     actual = effective_provider()
+    try:
+        import google.genai
+
+        sdk = getattr(google.genai, "__version__", "unknown")
+    except Exception:
+        sdk = "not installed"
     body = {
         "ok": True,
         "provider": actual,
+        "google_genai": sdk,
+        "embedding_model": settings.embedding_model,
         "site": SITE.get("root_url"),
         "pages": SITE.get("page_count", 0),
         "chunks": INDEX.size if INDEX else 0,
@@ -288,6 +296,24 @@ async def lookup(q: str):
 
     from .embed import embed_query
 
+    # Report the configuration on the failure path too. An error alone does
+    # not say which model was asked for, and a 404 from the embedding endpoint
+    # is almost always a model name that differs between environments.
+    config = {
+        "embedding_model": settings.embedding_model,
+        "embedding_dims": settings.embedding_dims,
+        "min_score": settings.min_score,
+        "min_z": settings.min_z,
+        "top_k": settings.top_k,
+        "key_fingerprint": (
+            f"{settings.gemini_api_key[:6]}...{settings.gemini_api_key[-4:]}"
+            f" ({len(settings.gemini_api_key)} chars)"
+            if settings.gemini_api_key else "EMPTY"
+        ),
+        "index_dims": INDEX.dims,
+        "index_chunks": INDEX.size,
+    }
+
     started = time.monotonic()
     try:
         vec = await embed_query(
@@ -297,7 +323,17 @@ async def lookup(q: str):
             dims=settings.embedding_dims,
         )
     except Exception as exc:
-        return {"error": f"{type(exc).__name__}: {exc}"}
+        detail = f"{type(exc).__name__}: {exc}"
+        hint = ""
+        if "404" in detail:
+            hint = (
+                "A 404 from the embedding endpoint means the model name is not "
+                "available to this key. Check EMBEDDING_MODEL in the Railway "
+                "variables matches the local .env, and that the SDK version "
+                "matches too: a name valid in one google-genai release can 404 "
+                "in another."
+            )
+        return {"error": detail, "hint": hint, "config": config}
     embed_ms = (time.monotonic() - started) * 1000
 
     hits = INDEX.search(
@@ -311,14 +347,7 @@ async def lookup(q: str):
         "query": q,
         "embed_ms": round(embed_ms),
         "embed_dims": len(vec),
-        "index": {"chunks": INDEX.size, "dims": INDEX.dims},
-        "settings": {
-            "min_score": settings.min_score,
-            "min_z": settings.min_z,
-            "top_k": settings.top_k,
-            "embedding_model": settings.embedding_model,
-            "embedding_dims": settings.embedding_dims,
-        },
+        "config": config,
         "stats": INDEX.last_stats,
         "returned": [
             {"score": round(h.score, 3), "url": h.url, "section": h.heading}
