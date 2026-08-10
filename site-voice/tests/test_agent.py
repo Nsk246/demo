@@ -28,7 +28,7 @@ def test_prompt_grounds_facts_without_claiming_what_is_missing():
     assert "check that you can point to it" in text
     assert "probably charges" in text
     assert "NOT in your summary" not in text
-    assert "While a lookup is running you do not have the answer" in text
+    assert "the answer is not available yet" in text
 
 
 def test_prompt_never_refers_to_the_business_in_third_person():
@@ -48,9 +48,9 @@ def test_prompt_governs_turn_taking():
     turn, said "is there anything else" after almost every answer, and
     stacked two holding phrases in one turn."""
     text = agent_mod.build(name="Acme", brief="b", crawled_at="today")
-    assert "Answer, then stop talking" in text
-    assert "They are thinking, not finished" in text
-    assert "Do not narrate a lookup" in text
+    assert "A turn ends once the answer is given" in text
+    assert "still thinking, not that they have finished" in text
+    assert "A lookup is never narrated" in text
     assert "do not say it again" in text
 
 
@@ -288,4 +288,23 @@ def test_follow_up_questions_are_forbidden_outright():
 def test_prices_must_carry_their_unit():
     """It said "one hundred fifty nine per week", dropping the currency."""
     text = agent_mod.build(name="Acme", brief="b", crawled_at="today")
-    assert "always include the unit" in text
+    assert "with the unit included" in text
+
+
+def test_no_instruction_can_be_read_out_as_a_line():
+    """The agent said "Wait." and "We spell that out" on a real call. Both
+    were prompt instructions spoken verbatim instead of followed. Short
+    second-person imperatives are the ones that leak, so the rules are worded
+    as descriptions of behaviour."""
+    import re
+
+    text = agent_mod.build(name="Acme", brief="b", crawled_at="today")
+    for line in text.split("\n"):
+        assert not re.search(r"(^|\. )(wait|stop|spell out)\b", line, re.I), line
+    assert "None of their\nwording is ever spoken aloud" in text
+
+
+def test_contact_details_are_spoken_character_by_character():
+    text = agent_mod.build(name="Acme", brief="b", crawled_at="today")
+    assert "digit by digit" in text
+    assert "one character at a time" in text
