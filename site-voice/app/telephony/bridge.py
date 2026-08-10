@@ -155,6 +155,9 @@ class MediaBridge:
         self._pending_this_turn = ""
         self._started_at = 0.0
         self._closing = False
+        self._media_frames = 0
+        self._stop_reason = "socket closed without a stop event"
+        self._agent_frames = 0
 
     # ---------------------------------------------------------------- helpers
 
@@ -220,7 +223,13 @@ class MediaBridge:
     # ------------------------------------------------------------- pump: in
 
     async def _phone_to_provider(self) -> None:
-        """Twilio receive loop. Ends when the call ends."""
+        """Twilio receive loop. Ends when the call ends.
+
+        How it ends is logged. A silent exit here looks identical whether
+        Twilio hung up, the socket dropped, or the model died, and those need
+        different fixes.
+        """
+        self._media_frames = 0
         async for raw in self.ws.iter_text():
             if self._closing:
                 break
@@ -257,6 +266,7 @@ class MediaBridge:
                     elif self._turn.caller_stopped_at is None:
                         self._turn.caller_stopped_at = time.time()
 
+                self._media_frames += 1
                 await self.provider.send_audio(
                     A.resample(samples, 8000, self.provider.input_hz).tobytes()
                 )
@@ -267,9 +277,43 @@ class MediaBridge:
                     self._turn.last_speech_sent_at = time.time()
 
             elif event == "stop":
+                log.info(
+                    "twilio sent stop after %d inbound frames (%.1fs of audio); "
+                    "the caller or Twilio ended the call",
+                    self._media_frames,
+                    self._media_frames * 0.02,
+                )
+                self._stop_reason = "twilio stop"
                 break
 
+            elif event == "mark":
+                pass
+
     # ------------------------------------------------------------ pump: out
+
+    async def _log_exit(self) -> None:
+        log.info(
+            "call ended: %s | caller audio %d frames | agent audio %d frames | "
+            "turns %d | barge-ins %d | tool calls %d",
+            self._stop_reason,
+            self._media_frames,
+            self._agent_frames,
+            len(self.transcript),
+            self.stats.barge_ins,
+            len(self.tool_calls),
+        )
+        if self._agent_frames and not self._media_frames:
+            log.warning(
+                "the agent spoke but no caller audio ever arrived. Twilio is "
+                "not sending inbound media, which usually means a one-way "
+                "stream: check the TwiML uses <Connect><Stream>, not "
+                "<Start><Stream>."
+            )
+        if self._media_frames and not self._agent_frames:
+            log.warning(
+                "caller audio arrived but the agent never produced any. The "
+                "model session opened and then said nothing."
+            )
 
     async def _provider_to_phone(self) -> None:
         """Provider receive loop.
@@ -338,6 +382,8 @@ class MediaBridge:
                 await self._emit({"type": "turn_end"})
 
             elif ev.kind == "error":
+                log.error("provider error, ending the call: %s", ev.detail)
+                self._stop_reason = f"provider error: {ev.detail}"
                 await self._emit({"type": "error", "detail": ev.detail})
                 break
 
@@ -405,6 +451,7 @@ class MediaBridge:
             except TimeoutError:
                 continue
             await self._send_to_twilio(frame)
+            self._agent_frames += 1
             self._spoken_this_turn = self._pending_this_turn
             # Drain whatever else is ready without waiting on the clock.
             while True:
@@ -471,4 +518,5 @@ class MediaBridge:
                 t.cancel()
             await asyncio.gather(*tasks, return_exceptions=True)
             await self.provider.close()
+            await self._log_exit()
         return self.stats.summary()
