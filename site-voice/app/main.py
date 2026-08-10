@@ -234,6 +234,9 @@ async def twilio_stream(ws: WebSocket, call_id: str):
         stall_after_ms=settings.stall_after_ms,
         barge_rms_threshold=settings.barge_rms_threshold,
         barge_sustain_frames=settings.barge_sustain_frames,
+        barge_rms_floor=settings.barge_rms_floor,
+        barge_noise_multiple=settings.barge_noise_multiple,
+        suppress_cap_s=settings.suppress_cap_s,
         # Two connect attempts with a pause between them do not fit in ten
         # seconds, and a timeout here cancels the retry that would have worked.
         connect_timeout_s=20.0,

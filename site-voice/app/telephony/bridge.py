@@ -123,6 +123,9 @@ class MediaBridge:
         stall_after_ms: int = 1500,
         barge_rms_threshold: int = BARGE_RMS_THRESHOLD,
         barge_sustain_frames: int = BARGE_SUSTAIN_FRAMES,
+        barge_rms_floor: int = 300,
+        barge_noise_multiple: float = 3.5,
+        suppress_cap_s: float = 4.0,
     ):
         self.ws = ws
         self.provider = provider
@@ -148,6 +151,12 @@ class MediaBridge:
         # Sustain frames are 20ms each, so 3 is 60ms of continuous speech.
         self.barge_rms_threshold = barge_rms_threshold
         self.barge_sustain_frames = barge_sustain_frames
+        # Never go below this, however quiet the line. The fixed threshold
+        # that worked before adaptation was 550, so going far under it invites
+        # echo and hum being read as speech.
+        self.barge_rms_floor = barge_rms_floor
+        self.barge_noise_multiple = barge_noise_multiple
+        self.suppress_cap_s = suppress_cap_s
         self.tool_calls: list[dict] = []
         self._tool_tasks: set[asyncio.Task] = set()
 
@@ -167,6 +176,13 @@ class MediaBridge:
         self._media_frames = 0
         self._stop_reason = "socket closed without a stop event"
         self._agent_frames = 0
+        self._suppress_audio = False
+        self._suppressed_at = 0.0
+        # Noise floor, learned from the line rather than assumed. A fixed RMS
+        # threshold works on the line it was tuned on and fails on the next
+        # one: a quiet mobile never reaches it, a noisy speakerphone sits
+        # above it permanently.
+        self._noise_floor = float(barge_rms_threshold) / 3.5
 
     # ---------------------------------------------------------------- helpers
 
@@ -239,6 +255,13 @@ class MediaBridge:
         self._pending_this_turn = ""
         self._agent_speaking = False
         self._loud_frames = 0
+        # The model is still generating. Clearing the queue is not enough:
+        # the next audio event would flip _agent_speaking back on and the
+        # agent would resume talking a second after being cut off, until the
+        # server's own detection caught up. Drop its remaining audio until
+        # this turn actually ends.
+        self._suppress_audio = True
+        self._suppressed_at = time.monotonic()
         await self._emit({"type": "barge_in"})
 
     # ------------------------------------------------------------- pump: in
@@ -273,8 +296,27 @@ class MediaBridge:
                 samples = A.ulaw_to_pcm16(payload)
                 rms = float(np.sqrt(np.mean(samples.astype(np.float64) ** 2)))
 
+                # Learn the line's noise floor while the agent is silent,
+                # and only from quiet frames, so the caller's own speech does
+                # not drag the floor up. Echo during agent speech is excluded
+                # for the same reason.
+                if not self._agent_speaking:
+                    # Asymmetric on purpose. A symmetric average took four
+                    # seconds to settle from its starting guess, which is most
+                    # of a short call. Falling fast tracks a quiet line almost
+                    # immediately; rising slowly stops one loud word from
+                    # dragging the floor up and deafening the next
+                    # interruption.
+                    if rms < self._noise_floor:
+                        self._noise_floor = 0.90 * self._noise_floor + 0.10 * rms
+                    elif rms < self._noise_floor * 2.5:
+                        self._noise_floor = 0.995 * self._noise_floor + 0.005 * rms
+                threshold = max(
+                    self.barge_rms_floor, self._noise_floor * self.barge_noise_multiple
+                )
+
                 if self._agent_speaking:
-                    if rms > self.barge_rms_threshold:
+                    if rms > threshold:
                         self._loud_frames += 1
                         if self._loud_frames >= self.barge_sustain_frames:
                             await self._barge_in()
@@ -282,7 +324,7 @@ class MediaBridge:
                         self._loud_frames = 0
                 else:
                     # Caller is talking; the clock for their turn keeps moving.
-                    if rms > self.barge_rms_threshold:
+                    if rms > threshold:
                         self._turn.caller_stopped_at = None
                     elif self._turn.caller_stopped_at is None:
                         self._turn.caller_stopped_at = time.time()
@@ -294,7 +336,7 @@ class MediaBridge:
                 # Only speech-bearing frames. Stamping every frame, silence
                 # included, measured the gap to the most recent silent packet
                 # and reported a meaningless single-digit millisecond figure.
-                if rms > self.barge_rms_threshold:
+                if rms > threshold:
                     self._turn.last_speech_sent_at = time.time()
 
             elif event == "stop":
@@ -352,6 +394,13 @@ class MediaBridge:
                 break
 
             if ev.kind == "audio":
+                if self._suppress_audio:
+                    # Cap it. If a turn_end never arrives the agent would be
+                    # mute for the rest of the call, which is worse than a
+                    # little overlap.
+                    if time.monotonic() - self._suppressed_at < self.suppress_cap_s:
+                        continue
+                    self._suppress_audio = False
                 if not self._agent_speaking:
                     self._agent_speaking = True
                     if self._turn.agent_first_audio_at is None:
@@ -399,6 +448,9 @@ class MediaBridge:
                     task.add_done_callback(self._tool_tasks.discard)
 
             elif ev.kind == "turn_end":
+                # The model finished, or the server noticed the interruption.
+                # Either way the tail we were dropping is over.
+                self._suppress_audio = False
                 self._agent_speaking = False
                 self._spoken_this_turn += self._pending_this_turn
                 self._pending_this_turn = ""

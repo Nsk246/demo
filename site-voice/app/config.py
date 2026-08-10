@@ -58,6 +58,10 @@ class Settings(BaseSettings):
     # around it, so with LOW start sensitivity a caller answering "yes" in
     # under a third of a second can be dropped. Only turn these on if
     # background noise is genuinely taking turns, and test short answers.
+    # START_SENSITIVITY_HIGH makes the server notice the caller sooner, so
+    # interruption is quicker. The cost is false positives: on a speakerphone
+    # the agent's own voice can trigger it and the agent cuts itself off.
+    # Try it only if client-side barge-in alone is not fast enough.
     gemini_start_of_speech_sensitivity: str = ""
     gemini_prefix_padding_ms: int = 0
     gemini_voice: str = "Aoede"
@@ -94,6 +98,14 @@ class Settings(BaseSettings):
     # noise cuts it off mid-word. Sustain frames are 20ms each.
     barge_rms_threshold: int = 550
     barge_sustain_frames: int = 3
+    # Hard minimum for the learned threshold. Below roughly 300 the agent's
+    # own echo on a speakerphone starts registering as the caller speaking,
+    # and the agent interrupts itself.
+    barge_rms_floor: int = 300
+    barge_noise_multiple: float = 3.5
+    # How long the model's remaining audio is dropped after an interruption,
+    # if no turn_end arrives to end it sooner.
+    suppress_cap_s: float = 4.0
     max_call_seconds: int = 600
 
     max_pages: int = 120
