@@ -66,11 +66,11 @@ def client():
 
 
 def test_the_suite_never_touches_the_real_database():
-    # A test that reads data/site.db passes for whoever has not ingested
-    # yet and fails for everyone else.
+    """A test that reads data/site.db passes for whoever has not ingested yet
+    and fails for everyone else."""
     import os
 
-    assert 'site-voice-tests-' in os.environ['SITE_DB'], os.environ['SITE_DB']
+    assert "site-voice-tests-" in os.environ["SITE_DB"], os.environ["SITE_DB"]
 
 
 def test_health_says_no_site_before_ingest(client):
@@ -91,3 +91,7 @@ def test_inbound_call_returns_a_stream_url_with_the_call_sid(client):
     resp = client.post("/twilio/voice", data={"To": "+1615", "From": "+1901", "CallSid": "CA9"})
     assert resp.status_code == 200
     assert 'wss://demo.test/ws/twilio/CA9' in resp.text
+
+
+def test_lookup_endpoint_reports_no_site_rather_than_crashing(client):
+    assert client.get("/api/lookup", params={"q": "price"}).json()["error"]

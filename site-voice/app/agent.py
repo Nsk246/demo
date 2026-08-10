@@ -14,8 +14,12 @@ rules are mostly brevity, confirmation, and never guessing.
 
 from __future__ import annotations
 
+import logging
+import time
 from datetime import datetime
 from zoneinfo import ZoneInfo
+
+log = logging.getLogger(__name__)
 
 TOOL_SCHEMAS = [
     {
@@ -156,6 +160,7 @@ class ToolDispatcher:
         question = (question or "").strip()
         if not question:
             return render([])
+        started = time.monotonic()
         try:
             vec = await embed_query(
                 question,
@@ -175,6 +180,20 @@ class ToolDispatcher:
             top_k=self.settings.top_k,
             min_score=self.settings.min_score,
             min_z=self.settings.min_z,
+        )
+        stats = self.index.last_stats
+        log.info(
+            "lookup %r -> %d hits | top %.3f | mean %.3f | min_score %.2f "
+            "min_z %.1f | index %d chunks, %d dims | %.0fms",
+            question,
+            len(hits),
+            stats.get("top", 0.0),
+            stats.get("mean", 0.0),
+            self.settings.min_score,
+            self.settings.min_z,
+            self.index.size,
+            self.index.dims,
+            (time.monotonic() - started) * 1000,
         )
         self.lookups.append(
             {"question": question, "hits": len(hits),

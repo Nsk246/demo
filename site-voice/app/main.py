@@ -6,6 +6,7 @@ import contextlib
 import json
 import logging
 import pathlib
+import time
 import uuid
 from contextlib import asynccontextmanager
 
@@ -270,6 +271,63 @@ async def monitor(ws: WebSocket):
         pass
     finally:
         _monitors.get("*", set()).discard(ws)
+
+
+@app.get("/api/lookup")
+async def lookup(q: str):
+    """Run the production retrieval path over HTTP.
+
+    Same index, same settings, same embedding call the agent makes. A caller
+    reporting "nothing on the site" for something that scores well locally is
+    otherwise impossible to tell apart from a slow network, a stale database,
+    or a threshold difference between environments.
+    """
+    if INDEX is None:
+        return {"error": "no site loaded"}
+
+    from .embed import embed_query
+
+    started = time.monotonic()
+    try:
+        vec = await embed_query(
+            q,
+            api_key=settings.gemini_api_key,
+            model=settings.embedding_model,
+            dims=settings.embedding_dims,
+        )
+    except Exception as exc:
+        return {"error": f"{type(exc).__name__}: {exc}"}
+    embed_ms = (time.monotonic() - started) * 1000
+
+    hits = INDEX.search(
+        vec, top_k=settings.top_k, min_score=settings.min_score,
+        min_z=settings.min_z,
+    )
+    # Also search with no floor, so a threshold problem is distinguishable
+    # from an index or embedding problem at a glance.
+    unfiltered = INDEX.search(vec, top_k=5, min_score=0.0, min_z=0.0)
+    return {
+        "query": q,
+        "embed_ms": round(embed_ms),
+        "embed_dims": len(vec),
+        "index": {"chunks": INDEX.size, "dims": INDEX.dims},
+        "settings": {
+            "min_score": settings.min_score,
+            "min_z": settings.min_z,
+            "top_k": settings.top_k,
+            "embedding_model": settings.embedding_model,
+            "embedding_dims": settings.embedding_dims,
+        },
+        "stats": INDEX.last_stats,
+        "returned": [
+            {"score": round(h.score, 3), "url": h.url, "section": h.heading}
+            for h in hits
+        ],
+        "best_regardless_of_threshold": [
+            {"score": round(h.score, 3), "url": h.url, "section": h.heading}
+            for h in unfiltered
+        ],
+    }
 
 
 @app.get("/api/calls")
