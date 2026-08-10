@@ -36,6 +36,8 @@ class Index:
         top_k: int = 4,
         min_score: float = 0.55,
         min_z: float = 0.0,
+        max_per_page: int = 2,
+        expand_top_page: bool = True,
     ) -> list[Retrieved]:
         """Cosine similarity with a floor.
 
@@ -77,19 +79,23 @@ class Index:
         if min_z > 0 and self.size >= 30 and self.last_stats["z"] < min_z:
             return []
 
-        order = np.argsort(-scores)[: max(top_k * 3, top_k)]
+        order = np.argsort(-scores)[: max(top_k * 6, top_k)]
         hits: list[Retrieved] = []
-        seen_urls: set[str] = set()
+        per_page: dict[str, int] = {}
         for i in order:
             score = float(scores[i])
             if score < min_score:
                 break
             row = self.rows[int(i)]
-            # One chunk per page. Three chunks off the same page sound like one
-            # source to a caller and waste the context budget.
-            if row["url"] in seen_urls:
+            # At most two chunks per page. One was too few: a vague question
+            # like "tell me more about X" scores highest on a page's marketing
+            # blurb, and returning only that hides the detail chunk on the very
+            # page the query just identified as relevant. The same question
+            # phrased as "what is the curriculum for X" answered correctly,
+            # which is not a difference a caller should be able to feel.
+            if per_page.get(row["url"], 0) >= max_per_page:
                 continue
-            seen_urls.add(row["url"])
+            per_page[row["url"]] = per_page.get(row["url"], 0) + 1
             hits.append(
                 Retrieved(
                     url=row["url"],
@@ -101,6 +107,40 @@ class Index:
             )
             if len(hits) >= top_k:
                 break
+
+        # Pull in the rest of the winning page, even below the floor. Once a
+        # page has scored well the question is what it says, not whether each
+        # paragraph independently clears a threshold. This is what turns
+        # "focuses on critical thinking" into the actual curriculum.
+        # Only expand a page that clearly won. A top hit sitting just above
+        # the floor is a weak match, and expanding it dumps an entire
+        # irrelevant page into the model's context: "what happens if we miss a
+        # class" returned six chunks of the summer camp page, none of which
+        # answered it. Enrich a confident match, never inflate a marginal one.
+        confident = hits and hits[0].score >= min_score + 0.04
+        if expand_top_page and confident:
+            best_url = hits[0].url
+            added = 0
+            have = {(h.url, h.text) for h in hits}
+            for i in np.argsort(-scores):
+                row = self.rows[int(i)]
+                if row["url"] != best_url or (row["url"], row["text"]) in have:
+                    continue
+                if float(scores[i]) < min_score * 0.8:
+                    break
+                added += 1
+                hits.append(
+                    Retrieved(
+                        url=row["url"],
+                        title=row["title"],
+                        heading=row["heading"],
+                        text=row["text"],
+                        score=float(scores[i]),
+                    )
+                )
+                # Two extra at most. More is the same page said again.
+                if added >= 2 or len(hits) >= top_k + 2:
+                    break
         return hits
 
 

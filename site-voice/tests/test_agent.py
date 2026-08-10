@@ -308,3 +308,11 @@ def test_contact_details_are_spoken_character_by_character():
     text = agent_mod.build(name="Acme", brief="b", crawled_at="today")
     assert "digit by digit" in text
     assert "one character at a time" in text
+
+
+def test_a_correction_from_the_caller_permits_another_search():
+    """The caller said "No, I mean Python coding" and the agent restated the
+    same vague answer. A correction is new information, not a repeat."""
+    text = agent_mod.build(name="Acme", brief="b", crawled_at="today")
+    assert "search once more with their exact words" in text
+    assert "Repeating yourself is never the right response to being corrected" in text

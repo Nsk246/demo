@@ -15,6 +15,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
+from app.config import log_config_source  # noqa: E402
 from app.embed import embed_query  # noqa: E402
 from app.retrieval import Index  # noqa: E402
 from app.config import get_settings  # noqa: E402
@@ -33,6 +34,12 @@ DEFAULT = [
 
 async def main() -> int:
     settings = get_settings()
+    if not settings.gemini_api_key:
+        print(f"GEMINI_API_KEY is empty. Config came from {log_config_source()}.")
+        print("If that says MISSING, run: cp .env.example .env, then fill in "
+              "the key. Exporting it in one shell does not survive a new "
+              "terminal or a Codespace restart, which is what .env is for.")
+        return 1
     conn = connect(settings.site_db)
     site = site_row(conn)
     if not site:
@@ -86,8 +93,10 @@ async def main() -> int:
                 print(f"        {hit.score:.2f}  {hit.heading or hit.title}  {hit.url}")
             # A cluster of near-identical scores across different pages means
             # the same block was indexed on all of them, which is chrome the
-            # crawl failed to strip rather than a genuine spread of answers.
-            if len(hits) > 2 and hits[0].score - hits[-1].score < 0.02:
+            # crawl failed to strip. Same-page clusters are page expansion
+            # working as intended, so only distinct URLs count.
+            distinct = {h.url for h in hits}
+            if len(distinct) > 2 and hits[0].score - hits[-1].score < 0.02:
                 print("        ^ near-identical scores across pages: likely "
                       "boilerplate that survived the crawl")
         print()
