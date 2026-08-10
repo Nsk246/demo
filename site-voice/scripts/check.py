@@ -96,6 +96,28 @@ def cli_signature_matches() -> list[str]:
     return sorted(passed - accepted)
 
 
+def env_dependent_tests() -> list[str]:
+    """Tests must not reload the settings module.
+
+    Settings read the developer's own .env, so such a test passes on a machine
+    without one and fails on a machine with one. The same class of bug already
+    shipped here once as a test that read the real data/site.db.
+    """
+    hits = []
+    for path in TESTS.rglob("*.py"):
+        source = path.read_text()
+        if "importlib.reload" in source and "config" in source:
+            for i, line in enumerate(source.splitlines()):
+                if "importlib.reload" in line:
+                    hits.append(f"{path.relative_to(ROOT)}:{i + 1}")
+    return hits
+
+
+def tests_use_a_sandbox_db() -> bool:
+    """The suite must point at a temporary database, never data/site.db."""
+    return "site-voice-tests-" in (TESTS / "conftest.py").read_text()
+
+
 def no_live_model_in_tests() -> bool:
     """The suite must never call a live model: slow, costs money per run, and
     the result depends on what the model felt like returning."""
@@ -118,6 +140,9 @@ if __name__ == "__main__":
     hits = cli_signature_matches()
     say("ingest CLI signature matches its caller", not hits, " ".join(hits))
     say("tests never reach a live model", no_live_model_in_tests())
+    say("tests use a sandbox database", tests_use_a_sandbox_db())
+    hits = env_dependent_tests()
+    say("no tests reloading the settings module", not hits, " ".join(hits))
     hits = db_not_committed()
     say("crawled db is gitignored", not hits, " ".join(hits))
     print()

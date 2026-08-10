@@ -9,9 +9,13 @@ test:
 check:
 	python scripts/check.py
 
+# --proxy-headers is what makes X-Forwarded-* visible. Without it Twilio
+# signature validation fails behind Codespaces or any load balancer. No
+# ws-ping flags: uvicorn closes the socket when Twilio does not pong, which
+# drops live calls.
 run:
 	uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload \
-	  --ws-ping-interval 20 --ws-ping-timeout 20
+	  --proxy-headers --forwarded-allow-ips="*"
 
 ingest:
 	python -m app.ingest $(URL)
@@ -25,6 +29,13 @@ from-archive:
 
 netcheck:
 	python scripts/netcheck.py $(URL)
+
+# Is the model reachable at all? Answers that without a phone call.
+probe:
+	python tools/probe_gemini.py
+
+sweep:
+	python tools/sweep_latency.py
 
 eval:
 	python scripts/eval.py
