@@ -1,0 +1,10 @@
+{
+  "name": "site-voice",
+  "image": "mcr.microsoft.com/devcontainers/python:3.12",
+  "postCreateCommand": "pip install -r requirements.txt && cp -n .env.example .env || true",
+  "forwardPorts": [8000],
+  "portsAttributes": { "8000": { "label": "voice", "visibility": "public" } },
+  "customizations": {
+    "vscode": { "extensions": ["ms-python.python", "charliermarsh.ruff"] }
+  }
+}

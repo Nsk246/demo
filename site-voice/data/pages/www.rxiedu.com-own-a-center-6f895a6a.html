@@ -1,0 +1,1267 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=AW-17831899503"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'AW-17831899503');
+</script>
+
+<!-- Google Tag Manager -->
+<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+})(window,document,'script','dataLayer','GTM-KP79F3ZF');</script>
+<!-- End Google Tag Manager -->
+
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Own A Center - RobotiX Institute</title>
+
+    <!--================= Meta Tags ================= -->
+
+    <!-- ================ Favicon ================== -->
+    <link rel="icon" type="image/png" href="/img/favicons/favicon.ico" />
+
+    <!--================= Google Fonts ================= -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Abril+Fatface&family=Bricolage+Grotesque:opsz,wght@12..96,200..800&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Rubik:ital,wght@0,300..900;1,300..900&display=swap"
+      rel="stylesheet"
+    />
+
+    <!--================= All CSS File ================= -->
+    <!-- plugins -->
+    <link rel="stylesheet" href="/css/plugins.css" />
+    <!-- Theme Custom CSS -->
+    <link rel="stylesheet" href="/css/style.css" />
+    <!-- Our Styles -->
+    <link rel="stylesheet" href="/css/style-1.css" />
+    <link rel="stylesheet" href="/css/style-2.css" />
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" />
+
+    <style>
+         /* Enhanced Form Styling */
+        .form-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .form-header {
+            background: linear-gradient(135deg, var(--theme-color), #ff6b35) !important;
+            color: white;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .form-header h2 {
+            font-weight: 600;
+            margin: 0;
+            color: white;
+            font-size: 1.8rem;
+        }
+
+        .form-header p {
+            margin: 0.5rem 0 0 0;
+            opacity: 0.95;
+            color: white;
+        }
+
+        .form-body {
+            padding: 2.5rem;
+        }
+
+        .form-label {
+            font-weight: 500;
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
+
+        .form-control,
+        .form-select {
+            border: 1px solid #ddd;
+            padding: 0.65rem 1rem;
+            transition: all 0.3s ease;
+            border-radius: 0.375rem;
+            height: auto !important;
+        }
+
+        .form-control:focus,
+        .form-select:focus {
+            border-color: #f7921f;
+            box-shadow: 0 0 0 0.2rem rgba(247, 146, 31, 0.15);
+        }
+
+        .btn-submit {
+            background: #f7921f;
+            color: white;
+            padding: 0.8rem 3rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+        }
+
+        .btn-submit:hover {
+            background: #e67e0f;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(247, 146, 31, 0.3);
+            color: white;
+        }
+        
+        .section-title-form {
+            color: #f7921f;
+            font-weight: 600;
+            font-size: 1.1rem;
+            margin: 1.5rem 0 1rem 0;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #f7921f;
+        }
+
+        /* Feature Card Styling */
+        .feature-card {
+            background: #fff;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+            transition: transform 0.3s ease;
+            height: 100%;
+            border: 1px solid #f7921f;
+        }
+        .feature-card:hover {
+            transform: translateY(-10px);
+            border: 2px solid var(--theme-color);
+        }
+        .feature-icon-circle {
+            width: 70px;
+            height: 70px;
+            background: rgba(247, 146, 31, 0.1);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+            color: var(--theme-color);
+            font-size: 2rem;
+        }
+    
+        /* Process Step Styling */
+        .process-step {
+            position: relative;
+            padding: 20px;
+        }
+        .step-number {
+             font-size: 3rem;
+             font-weight: 800;
+             color: rgba(247, 146, 31, 0.33);
+             line-height: 1;
+             margin-bottom: -20px;
+             position: relative;
+             z-index: 0;
+        }
+        .step-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        
+      /* Background gradient */
+      .faq-gradient {
+        background: linear-gradient(
+          135deg,
+          #f5f7fa 0%,
+          #e9ecf4 100%
+        );
+        padding: 80px 0;
+      }
+
+      /* Accordion polish */
+
+      .accordion-button:not(.collapsed) {
+        background: linear-gradient(135deg, var(--theme-color), #ff6b35) !important;
+        color: white !important;
+        box-shadow: none;
+      }
+
+      .accordion-button:not(.collapsed)::after {
+        color: white !important;
+      }
+
+      .accordion-style1 .accordion-item {
+        border: none;
+        margin-bottom: 15px;
+        border-radius: 10px;
+        overflow: hidden;
+        background: #fff;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+      }
+
+      .accordion-style1 .accordion-button {
+        background: #fff;
+        font-weight: 600;
+        color: #333;
+        padding: 25px 20px;
+      }
+
+      .accordion-style1 .accordion-button:focus {
+        box-shadow: none;
+      }
+
+      .accordion-style1 .accordion-body {
+        background: #fff;
+        color: #555;
+        line-height: 1.6;
+      }
+
+
+        /* FAQ Styling Override */
+        .accordion-button:not(.collapsed) {
+            background: linear-gradient(135deg, var(--theme-color), #ff6b35) !important;
+            color: white !important;
+        }
+        .accordion-button:focus {
+            box-shadow: none;
+        }
+    </style>
+  </head>
+  <body>
+    <!-- Start Mobile Menu -->
+    <div class="vs-menu-wrapper">
+  <div class="vs-menu-area text-center">
+    <div class="mobile-logo">
+      <a href="/"><img src="/img/Logo-RXI.png" alt="Carmax" class="logo" /></a>
+      <button class="vs-menu-toggle" style="color: white !important">
+        <i class="fal fa-times"></i>
+      </button>
+    </div>
+    <div class="vs-mobile-menu">
+      <ul>
+        <li class="menu-item">
+          <a href="/">Home</a>
+        </li>
+        <li class="menu-item">
+          <a href="/About-RobotiX-Institute">About US</a>
+        </li>
+        <li class="menu-item-has-children">
+          <a href="/RobotiX-Institute-Programs">Programs</a>
+          <ul class="sub-menu">
+            
+              
+                <li>
+                  <a href="/Programs/lego-basic">LEGO Robotics Basic</a>
+                </li>
+              
+                <li>
+                  <a href="/Programs/vex-iq-basic">VEX IQ Basic</a>
+                </li>
+              
+                <li>
+                  <a href="/Programs/lego-advanced">LEGO Robotics Advanced</a>
+                </li>
+              
+                <li>
+                  <a href="/Programs/vex-iq-advanced">VEX IQ Advanced</a>
+                </li>
+              
+                <li>
+                  <a href="/Programs/python-coding">Python Coding</a>
+                </li>
+              
+                <li>
+                  <a href="/Programs/vex-v5-high-school">VEX V5 High School</a>
+                </li>
+              
+            
+          </ul>
+        </li>
+        <li class="menu-item-has-children">
+          <a href="/RobotiX-Institute-Camps">Camps</a>
+          <ul class="sub-menu">
+            <li>
+              <a href="/Camps/Summer-Camp">Summer Camp (Jun-July) </a>
+            </li>
+            <li>
+              <a href="/Camps/Fall-Camp">Fall Camp (Oct) </a>
+            </li>
+            <li>
+              <a href="/Camps/Winter-Camp">Winter Camp (Dec)</a>
+            </li>
+            <li>
+              <a href="/Camps/Spring-Camp">Spring Camp (Mar)</a>
+            </li>
+          </ul>
+        </li>
+        <li class="menu-item-has-children">
+          <a href="/RobotiX-Institute-Locations">Locations</a>
+          <ul class="sub-menu">
+            
+              
+                <li>
+                  <a href="/Locations/RobotiX-Institute-Brentwood">
+                    Brentwood, Tn
+                  </a>
+                </li>
+              
+                <li>
+                  <a href="/Locations/Robotix-Institute-Murfreesboro">
+                    Murfreesboro
+                  </a>
+                </li>
+              
+            
+          </ul>
+        </li>
+        <li>
+          <a href="/Register-On-RobotiX-Institute">Register</a>
+        </li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+    <!-- End Mobile Menu -->
+
+    <!-- Start Navbar -->
+    <div id="navbars" class="header-sticky navbars" style="height: 77px">
+  <div class="container custom-container">
+    <div class="row justify-content-between align-items-center">
+      <div class="col-xl-3 col-lg-auto">
+        <div
+          class="header-logo d-flex justify-content-between align-items-center"
+        >
+          <a href="/"
+            ><img src="/img/Logo-RXI.png" alt="Luxrio" class="logo navbar-logo"
+          /></a>
+          <div class="d-flex align-items-center gap-3">
+            <a href="/Book-A-Free-Trial" class="vs-btn style8 d-lg-none">
+              <span>Free&nbsp;Trial</span>
+            </a>
+            <button class="vs-menu-toggle d-inline-block d-lg-none">
+              <i class="fal fa-bars"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+      <div
+        class="col-xl-9 col-lg-auto d-none d-lg-flex justify-content-end gap-md-4 gap-xl-5"
+        style="height: 77px; color: grey !important"
+      >
+        <nav
+          class="main-menu menu-style1 d-none d-lg-block main-menu-start-navbar"
+        >
+          <ul
+            class="d-flex justify-content-center align-items-center"
+            style="height: 77px"
+          >
+            <li class="menu-item">
+              <a href="/">Home</a>
+            </li>
+            <li class="menu-item">
+              <a href="/About-RobotiX-Institute">About US</a>
+            </li>
+            <li class="menu-item-has-children">
+              <a href="/RobotiX-Institute-Programs">Programs</a>
+              <ul class="sub-menu">
+                
+                  
+                    <li>
+                      <a href="/Programs/lego-basic">LEGO Robotics Basic</a>
+                    </li>
+                  
+                    <li>
+                      <a href="/Programs/vex-iq-basic">VEX IQ Basic</a>
+                    </li>
+                  
+                    <li>
+                      <a href="/Programs/lego-advanced">LEGO Robotics Advanced</a>
+                    </li>
+                  
+                    <li>
+                      <a href="/Programs/vex-iq-advanced">VEX IQ Advanced</a>
+                    </li>
+                  
+                    <li>
+                      <a href="/Programs/python-coding">Python Coding</a>
+                    </li>
+                  
+                    <li>
+                      <a href="/Programs/vex-v5-high-school">VEX V5 High School</a>
+                    </li>
+                  
+                
+              </ul>
+            </li>
+            <li class="menu-item-has-children">
+              <a href="/RobotiX-Institute-Camps">Camps</a>
+              <ul class="sub-menu">
+                <li>
+                  <a href="/Camps/Summer-Camp">Summer Camp (Jun-July) </a>
+                </li>
+                <li>
+                  <a href="/Camps/Fall-Camp">Fall Camp (Oct) </a>
+                </li>
+                <li>
+                  <a href="/Camps/Winter-Camp">Winter Camp (Dec)</a>
+                </li>
+                <li>
+                  <a href="/Camps/Spring-Camp">Spring Camp (Mar)</a>
+                </li>
+              </ul>
+            </li>
+            <li class="menu-item-has-children">
+              <a href="/RobotiX-Institute-Locations">Locations</a>
+              <ul class="sub-menu">
+                
+                  
+                    <li>
+                      <a href="/Locations/RobotiX-Institute-Brentwood">
+                        Brentwood, Tn
+                      </a>
+                    </li>
+                  
+                    <li>
+                      <a href="/Locations/Robotix-Institute-Murfreesboro">
+                        Murfreesboro
+                      </a>
+                    </li>
+                  
+                
+              </ul>
+            </li>
+            <li>
+              <a href="/Register-On-RobotiX-Institute">Register</a>
+            </li>
+          </ul>
+        </nav>
+        <div class="header-wc style2">
+          <a href="/Book-A-Free-Trial" class="vs-btn style8">
+            <span>Free&nbsp;Trial</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    <!-- End Navbar -->
+
+    <!-- Start Main -->
+    <main class="main">
+      <!-- Start Header -->
+      <header class="vs-header layout2">
+  <!-- Main Menu Area -->
+  <div class="sticky-wrapper position-relative">
+    <div class="header-bottom">
+      <div class="container custom-container">
+        <div class="row justify-content-between align-items-center">
+          <div class="col-xl-3 col-lg-auto">
+            <div
+              class="header-logo d-flex justify-content-between align-items-center"
+            >
+              <a href="/"
+                ><img
+                  src="/img/Logo-RXI.png"
+                  alt="RobotiX Institute"
+                  class="logo"
+                  style="width: 70%"
+              /></a>
+              <div class="d-flex align-items-center gap-3">
+                <a
+                  href="/Book-A-Free-Trial"
+                  class="vs-btn style8 d-lg-none"
+                >
+                  <span>Free&nbsp;Trial</span>
+                </a>
+                <button class="vs-menu-toggle d-inline-block d-lg-none">
+                  <i class="fal fa-bars"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="col-xl-9 col-lg-auto d-none d-lg-flex justify-content-end gap-md-4 gap-xl-5">
+            <nav class="main-menu menu-style1 v2 d-none d-lg-block">
+              <ul class="d-flex justify-content-center align-items-center">
+                <li class="menu-item">
+                  <a href="/">Home</a>
+                </li>
+                <li class="menu-item">
+                  <a href="/About-RobotiX-Institute">About US</a>
+                </li>
+                <li class="menu-item-has-children">
+                  <a href="/RobotiX-Institute-Programs">Programs</a>
+                  <ul class="sub-menu">
+                    
+                      
+                        <li>
+                          <a href="/Programs/lego-basic">LEGO Robotics Basic</a>
+                        </li>
+                      
+                        <li>
+                          <a href="/Programs/vex-iq-basic">VEX IQ Basic</a>
+                        </li>
+                      
+                        <li>
+                          <a href="/Programs/lego-advanced">LEGO Robotics Advanced</a>
+                        </li>
+                      
+                        <li>
+                          <a href="/Programs/vex-iq-advanced">VEX IQ Advanced</a>
+                        </li>
+                      
+                        <li>
+                          <a href="/Programs/python-coding">Python Coding</a>
+                        </li>
+                      
+                        <li>
+                          <a href="/Programs/vex-v5-high-school">VEX V5 High School</a>
+                        </li>
+                      
+                    
+                  </ul>
+                </li>
+                <li class="menu-item-has-children">
+                  <a href="/RobotiX-Institute-Camps">Camps</a>
+                  <ul class="sub-menu">
+                    <li>
+                      <a href="/Camps/Summer-Camp"
+                        >Summer Camp (Jun-July)
+                      </a>
+                    </li>
+                    <li>
+                      <a href="/Camps/Fall-Camp">Fall Camp (Oct) </a>
+                    </li>
+                    <li>
+                      <a href="/Camps/Winter-Camp">Winter Camp (Dec)</a>
+                    </li>
+                    <li>
+                      <a href="/Camps/Spring-Camp">Spring Camp (Mar)</a>
+                    </li>
+                  </ul>
+                </li>
+                <li class="menu-item-has-children">
+                  <a href="/RobotiX-Institute-Locations">Locations</a>
+                  <ul class="sub-menu">
+                    
+                      
+                        <li>
+                          <a href="/Locations/RobotiX-Institute-Brentwood">
+                            Brentwood, Tn
+                          </a>
+                        </li>
+                      
+                        <li>
+                          <a href="/Locations/Robotix-Institute-Murfreesboro">
+                            Murfreesboro
+                          </a>
+                        </li>
+                      
+                    
+                  </ul>
+                </li>
+                <li>
+                  <a href="/Register-On-RobotiX-Institute">Register</a>
+                </li>
+              </ul>
+            </nav>
+            <div class="header-wc style2">
+              <a href="/Book-A-Free-Trial" class="vs-btn style8">
+                <span>Free&nbsp;Trial</span>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+      <!-- End Header -->
+
+      <!-- Start Hero Section -->
+      <section
+        class="z-index-common hero-layout3 overflow-clip px-0 mh-0 py-5"
+        style="
+          min-height: 0vh;
+          background-size: cover;
+          background-blend-mode: overlay;
+          background-position: center center;
+          background-repeat: no-repeat;
+          background-image: url(/img/book-a-free-trial/hero-bg-img.jpg),
+            linear-gradient(45deg, rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5));
+        "
+      >
+        <div class="container">
+          <div
+            class="row gy-5 justify-content-between align-items-center align-content-center"
+            style="min-height: 60vh"
+          >
+            <div class="col-12">
+              <div class="hero-content text-center">
+                <span class="sec-subtitle text-white-color text-capitalize mb-2">
+                  Franchise Opportunity
+                </span>
+                <h1 class="sec-title text-white-color fw-semibold gradient-text mb-3">
+                  Start Your Own <span class="text-theme-color">RobotiX Institute</span>
+                </h1>
+
+                <div class="program-tags mt-2">
+                  <span class="program-tag"
+                    ><i class="bi bi-graph-up-arrow me-1"></i> High ROI</span
+                  >
+                  <span class="program-tag"
+                    ><i class="bi bi-people me-1"></i> Growing Market</span
+                  >
+                  <span class="program-tag"
+                    ><i class="bi bi-award me-1"></i> Proven Model</span
+                  >
+                </div>
+
+                <p class="sec-text text-white-color mt-4 mb-4 pb-2 fs-5">
+                  Join a growing network of educational entrepreneurs. Build a business with purpose.
+                </p>
+
+                <div class="header-btn">
+                  <a href="#enquiryForm" class="vs-btn style8">Request Franchise Info</a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+      <!-- End Hero Section -->
+      
+      <!-- Start Why partner with us -->
+      <section class="vs-choose-us awards-style1 overflow-hidden position-relative space bg-white">
+        <div class="container">
+          <div class="row gx-4 gy-4 gx-xxl-5 overflow-hidden align-items-center">
+            <div class="col-lg-6 col-12 fade-anim" data-direction="left">
+              <div class="choose-us-thumbnail">
+                <img
+                  src="/img/home-page/teacher-sons-making-robot.jpg"
+                  alt="thumbnail 1"
+                  class="w-100 rounded-3"
+                />
+              </div>
+            </div>
+            <div class="col-lg-6 col-12">
+              <div class="title-area mb-4">
+                <span class="sec-subtitle text-capitalize fade-anim" data-direction="top">
+                  Business Opportunity
+                </span>
+                <h2 class="sec-title fade-anim fw-medium f-poppins" data-direction="bottom">
+                  Why Partner With Us?
+                </h2>
+              </div>
+              <div class="choose-us-content">
+                <p class="mb-5 fs-6">
+                  The demand for STEM education is growing rapidly. Partnering with RobotiX Institute gives you a proven turnkey solution to tap into this lucrative market while making a real difference in children's lives.
+                </p>
+                <div class="info-area">
+                  <div class="row info-list">
+                    <div class="col-lg-6 info-item" style="border: none">
+                      <div class="info-icon">
+                        <img src="/img/icons/choos-us-icon-1.png" alt="icon" />
+                      </div>
+                      <div class="info-content">
+                        <h6 class="info-title">High ROI Business Model</h6>
+                      </div>
+                    </div>
+                    <div class="col-lg-6 info-item" style="border: none">
+                      <div class="info-icon">
+                        <img src="/img/icons/choos-us-icon-1.png" alt="icon" />
+                      </div>
+                      <div class="info-content">
+                        <h6 class="info-title">Comprehensive Curriculum</h6>
+                      </div>
+                    </div>
+                    <div class="col-lg-6 info-item" style="border: none">
+                      <div class="info-icon">
+                        <img src="/img/icons/choos-us-icon-1.png" alt="icon" />
+                      </div>
+                      <div class="info-content">
+                        <h6 class="info-title">Training & Support</h6>
+                      </div>
+                    </div>
+                    <div class="col-lg-6 info-item" style="border: none">
+                      <div class="info-icon">
+                        <img src="/img/icons/choos-us-icon-1.png" alt="icon" />
+                      </div>
+                      <div class="info-content">
+                        <h6 class="info-title">Exclusive Territories</h6>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+      <!-- End Why Partner With Us -->
+
+
+      <!-- Start Steps to Ownership -->
+      <section class="vs-process-wrappery my-5 bg-light">
+           <div class="container">
+               <div class="row justify-content-center">
+                   <div class="col-lg-8">
+                       <div class="title-area text-center mb-5">
+                           <span class="sec-subtitle">Your Journey</span>
+                           <h2 class="sec-title fw-medium">Steps to Ownership</h2>
+                           <p class="mt-2 text-muted fs-6">We have streamlined the process to help you launch your center smoothly.</p>
+                       </div>
+                   </div>
+               </div>
+               <div class="row g-4 text-center">
+                   <div class="col-md-3">
+                       <div class="process-step">
+                           <div class="step-number">01</div>
+                           <div class="step-content">
+                               <h5 class="fw-semibold mt-3">Enquiry</h5>
+                               <p class="text-muted">Submit your interest form to get our brochure.</p>
+                           </div>
+                       </div>
+                   </div>
+                   <div class="col-md-3">
+                        <div class="process-step">
+                            <div class="step-number">02</div>
+                            <div class="step-content">
+                                <h5 class="fw-semibold mt-3">Discovery</h5>
+                                <p class="text-muted">Initial call to discuss your goals and our model.</p>
+                            </div>
+                        </div>
+                   </div>
+                   <div class="col-md-3">
+                        <div class="process-step">
+                            <div class="step-number">03</div>
+                            <div class="step-content">
+                                <h5 class="fw-semibold mt-3">Agreement</h5>
+                                <p class="text-muted">Sign the franchise agreement and secure territory.</p>
+                            </div>
+                        </div>
+                   </div>
+                   <div class="col-md-3">
+                        <div class="process-step">
+                            <div class="step-number">04</div>
+                            <div class="step-content">
+                                <h5 class="fw-semibold mt-3">Launch</h5>
+                                <p class="text-muted">Training, site setup, and grand opening!</p>
+                            </div>
+                        </div>
+                   </div>
+               </div>
+           </div>
+      </section>
+      <!-- End Steps to Ownership -->
+
+      <!-- Start What You Get -->
+      <section class="vs-features-wrapper space">
+          <div class="container">
+              <div class="row justify-content-center">
+                  <div class="col-lg-8">
+                      <div class="title-area text-center mb-5">
+                          <span class="sec-subtitle">Comprehensive Support</span>
+                          <h2 class="sec-title fw-medium">What You'll Get</h2>
+                      </div>
+                  </div>
+              </div>
+              <div class="row g-4">
+                  <div class="col-md-4">
+                      <div class="feature-card">
+                          <div class="feature-icon-circle">
+                              <i class="bi bi-easel"></i>
+                          </div>
+                          <h5>Operational Training</h5>
+                          <p class="text-muted small">Intensive training on franchisee management, sales, and center operations.</p>
+                      </div>
+                  </div>
+                  <div class="col-md-4">
+                        <div class="feature-card">
+                            <div class="feature-icon-circle">
+                                <i class="bi bi-geo-alt"></i>
+                            </div>
+                            <h5>Site Selection</h5>
+                            <p class="text-muted small">Assistance in identifying and negotiating the perfect location for your institute.</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="feature-card">
+                            <div class="feature-icon-circle">
+                                <i class="bi bi-megaphone"></i>
+                            </div>
+                            <h5>Marketing Support</h5>
+                            <p class="text-muted small">Brand assets, social media strategies, and local marketing guidance.</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="feature-card">
+                            <div class="feature-icon-circle">
+                                <i class="bi bi-cpu"></i>
+                            </div>
+                            <h5>Curriculum Access</h5>
+                            <p class="text-muted small">Full access to our proprietary, ever-evolving robotics and coding curriculum.</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="feature-card">
+                            <div class="feature-icon-circle">
+                                <i class="bi bi-person-check"></i>
+                            </div>
+                            <h5>Hiring Assistance</h5>
+                            <p class="text-muted small">Guidance on recruiting and training qualified instructors.</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="feature-card">
+                            <div class="feature-icon-circle">
+                                <i class="bi bi-headset"></i>
+                            </div>
+                            <h5>Ongoing Support</h5>
+                            <p class="text-muted small">Continuous operational support to help your business grow.</p>
+                        </div>
+                    </div>
+              </div>
+          </div>
+      </section>
+      <!-- End What You Get -->
+
+      <!-- Start FAQ -->
+      <section class="vs-faq space faq-gradient">
+        <div class="container">
+          <div class="row">
+            <div class="col-lg-auto mx-auto">
+              <div class="title-area text-center mb-5">
+                <span class="sec-subtitle text-capitalize fade-anim d-block" data-direction="top">
+                  FAQ
+                </span>
+                <h2 class="sec-title fade-anim fw-semibold" data-direction="bottom">
+                  Frequently Asked Questions
+                </h2>
+              </div>
+            </div>
+          </div>
+
+          <div class="row g-4">
+            <div class="col-lg-6">
+              <div class="accordion accordion-style1 shadow-sm rounded" id="accordionLeft">
+                <div class="accordion-item">
+                  <h6 class="accordion-header">
+                    <button class="accordion-button fs-6 lh-base" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOneV1" aria-expanded="true" aria-controls="collapseOneV1">
+                      Do I need a background in robotics or education?
+                    </button>
+                  </h6>
+                  <div id="collapseOneV1" class="accordion-collapse collapse show" data-bs-parent="#accordionLeft">
+                    <div class="accordion-body">
+                      No! While a passion for education helps, you do not need technical expertise. We provide comprehensive training on our curriculum and operational model. We look for partners with strong business acumen and people skills.
+                    </div>
+                  </div>
+                </div>
+
+                <div class="accordion-item">
+                  <h6 class="accordion-header">
+                    <button class="accordion-button fs-6 lh-base collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwoV1" aria-expanded="false" aria-controls="collapseTwoV1">
+                      How much is the initial investment?
+                    </button>
+                  </h6>
+                  <div id="collapseTwoV1" class="accordion-collapse collapse" data-bs-parent="#accordionLeft">
+                    <div class="accordion-body">
+                      The total initial investment varies based on location size and condition. Typically, it ranges between $50k to $150k, which includes the franchise fee, equipment, and build-out.
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-lg-6">
+              <div class="accordion accordion-style1 shadow-sm rounded" id="accordionRight">
+                <div class="accordion-item">
+                  <h6 class="accordion-header">
+                    <button class="accordion-button fs-6 lh-base" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOneV2" aria-expanded="true" aria-controls="collapseOneV2">
+                      How long does it take to open?
+                    </button>
+                  </h6>
+                  <div id="collapseOneV2" class="accordion-collapse collapse show" data-bs-parent="#accordionRight">
+                    <div class="accordion-body">
+                      Once the agreement is signed and a site is selected, most centers can open within 3 to 6 months.
+                    </div>
+                  </div>
+                </div>
+
+                <div class="accordion-item">
+                  <h6 class="accordion-header">
+                    <button class="accordion-button fs-6 lh-base collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwoV2" aria-expanded="false" aria-controls="collapseTwoV2">
+                      Do you provide financing?
+                    </button>
+                  </h6>
+                  <div id="collapseTwoV2" class="accordion-collapse collapse" data-bs-parent="#accordionRight">
+                    <div class="accordion-body">
+                      We do not provide direct financing, but we can refer you to third-party lenders who are familiar with our business model.
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+      <!-- End FAQ -->
+
+      <!-- Start Franchise Form Section -->
+      <section class="vs-contact-wrapper space-bottom mt-5" id="enquiryForm">
+          <div class="container">
+               <div class="row justify-content-center">
+                    <div class="col-lg-8">
+                         <div class="form-card">
+                            <div class="form-header">
+                              <h2 class="text-center my-2 fw-bold text-white fs-1">
+                                <i class="bi bi-shop-window"></i> Franchise Enquiry
+                              </h2>
+                              <p class="fs-6">Fill out the form below to receive our franchise information brochure.</p>
+                            </div>
+
+                            <div class="form-body">
+                              <form action="#" method="POST"> <!-- Placeholder action -->
+                                
+                                <div class="section-title-form">
+                                  Personal Details
+                                </div>
+                                <div class="row g-3">
+                                  <div class="col-12 col-md-6">
+                                    <label for="name" class="form-label">Full Name <span style="color: red;">*</span></label>
+                                    <input type="text" class="form-control" id="name" name="name" required />
+                                  </div>
+
+                                  <div class="col-12 col-md-6">
+                                    <label for="email" class="form-label">Email Address <span style="color: red;">*</span></label>
+                                    <input type="email" class="form-control" id="email" name="email" required />
+                                  </div>
+                                </div>
+
+                                <div class="row g-3 mt-1">
+                                    <div class="col-12 col-md-6">
+                                        <label for="phone" class="form-label">Phone Number <span style="color: red;">*</span></label>
+                                        <input type="tel" class="form-control" id="phone" name="phone" required />
+                                    </div>
+                                    <div class="col-12 col-md-6">
+                                        <label for="city" class="form-label">Current City <span style="color: red;">*</span></label>
+                                        <input type="text" class="form-control" id="city" name="city" required />
+                                    </div>
+                                </div>
+
+                                <div class="section-title-form mt-4">
+                                  Business Interest
+                                </div>
+                                <div class="row g-3">
+                                  <div class="col-12 col-md-6">
+                                    <label for="location" class="form-label">Preferred Franchise Location <span style="color: red;">*</span></label>
+                                    <input type="text" class="form-control" id="location" name="location" placeholder="City, State" required />
+                                  </div>
+
+                                  <div class="col-12 col-md-6">
+                                    <label for="budget" class="form-label">Estimated Investment Budget <span style="color: red;">*</span></label>
+                                    <select class="form-select" id="budget" name="budget" required>
+                                      <option value="">-- Select Range --</option>
+                                      <option value="$50k - $100k">$50k - $100k</option>
+                                      <option value="$100k - $200k">$100k - $200k</option>
+                                      <option value="$200k+">$200k+</option>
+                                    </select>
+                                  </div>
+                                </div>
+
+                                <div class="mt-3">
+                                  <label for="message" class="form-label">Why are you interested in a RobotiX franchise?</label>
+                                  <textarea class="form-control" id="message" name="message" rows="4"></textarea>
+                                </div>
+
+                                <div class="text-center mt-4">
+                                  <button type="submit" class="btn btn-submit">
+                                    <i class="bi bi-send-fill me-2"></i> Submit Enquiry
+                                  </button>
+                                </div>
+                              </form>
+                            </div>
+                         </div>
+                    </div>
+               </div>
+          </div>
+      </section>
+      <!-- End Franchise Form Section -->
+
+    </main>
+    <!-- End Main -->
+
+    <!-- Footer -->
+    <!-- Start Footer -->
+    <footer
+      class="vs-footer-style1"
+      data-bg-src="/img/footer/footer-style1-bg.png"
+    >
+      <!-- <div class="footer-top space-top">
+        
+      </div> -->
+      <div class="footer-center space-top">
+        <div class="container">
+          <div
+            class="row gx-4 gy-4 gx-xl-2 justify-content-between"
+          >
+            <div class="col-md-6 col-lg-4 col-xl-4">
+              <div class="footer-widgets">
+                <a href="/" class="logo">
+                  <img
+                    src="/img/Logo-RXI.png"
+                    alt="logo"
+                  />
+                </a>
+                <p class="mt-4 mb-3 text-color-5">
+                  Welcome to RobotiX Institute, Tennessee’s
+                  leading robotics education center where
+                  imagination meets innovation! Join us at
+                  RobotiX Institute and take the first step
+                  towards a bright future in robotics and
+                  technology.
+                </p>
+              </div>
+            </div>
+            <div
+              class="col-lg-5 col-xl-4 order-md-3 order-lg-2"
+            >
+              <div class="footer-widgets">
+                <h5
+                  class="widgets-title text-white-color text-capitalize"
+                >
+                  Useful Links
+                </h5>
+                <div class="row gx-xl-2 g-2">
+                  <div class="col-md-6">
+                    <div class="footer-links">
+                      <ul class="custom-ul">
+                        <li>
+                          <a
+                            href="/Contact-RobotiX-Institute"
+                          >
+                            <i
+                              class="fa-solid fa-angles-right"
+                            ></i>
+                            Contact Us
+                          </a>
+                        </li>
+                        <li>
+                          <a
+                            href="/Own-A-Center"
+                          >
+                            <i
+                              class="fa-solid fa-angles-right"
+                            ></i>
+                            Own A Center?
+                          </a>
+                        </li>
+                        <li>
+                          <a href="/Blogs">
+                            <i
+                              class="fa-solid fa-angles-right"
+                            ></i>
+                            Blogs
+                          </a>
+                        </li>
+                        <li>
+                          <a
+                            href="/Why-RobotiX-Institute"
+                          >
+                            <i
+                              class="fa-solid fa-angles-right"
+                            ></i>
+                            Why US
+                          </a>
+                        </li>
+                        <li>
+                          <a href="/FAQ">
+                            <i
+                              class="fa-solid fa-angles-right"
+                            ></i>
+                            FAQ's
+                          </a>
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="footer-links">
+                      <ul class="custom-ul">
+                        <li>
+                          <a
+                            href="/Register-On-RobotiX-Institute"
+                          >
+                            <i
+                              class="fa-solid fa-angles-right"
+                            ></i>
+                            Register
+                          </a>
+                        </li>
+                        <li>
+                          <a
+                            href="/RobotiX-Institute-Locations"
+                          >
+                            <i
+                              class="fa-solid fa-angles-right"
+                            ></i>
+                            Locations
+                          </a>
+                        </li>
+                        <li>
+                          <a
+                            href="/RobotiX-Institute-Camps"
+                          >
+                            <i
+                              class="fa-solid fa-angles-right"
+                            ></i>
+                            Camps
+                          </a>
+                        </li>
+                        <li>
+                          <a
+                            href="/RobotiX-Institute-Programs"
+                          >
+                            <i
+                              class="fa-solid fa-angles-right"
+                            ></i>
+                            Programs
+                          </a>
+                        </li>
+                        <li>
+                          <a href="/Book-A-Free-Trial">
+                            <i
+                              class="fa-solid fa-angles-right"
+                            ></i>
+                            Free Trial
+                          </a>
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div
+              class="col-md-6 col-lg-3 col-xl-3 order-md-2 order-lg-3"
+            >
+              <div class="footer-widgets">
+                <h5
+                  class="widgets-title text-white-color text-capitalize"
+                >
+                  Locations
+                </h5>
+                <div class="">
+                  <p class="text-capitalize fs-5">
+                    brentwood
+                  </p>
+                  <p class="text-white-color">
+                    1722 General George Patton Dr A500,
+                    Brentwood, TN 37027
+                  </p>
+                  <br />
+                  <p class="text-capitalize fs-5">
+                    Murfreesboro
+                  </p>
+                  <p class="text-white-color">
+                    1630 S Church St Unit 103,
+                    Murfreesboro TN 37130
+                  </p>
+                  <br />
+                  <p class="text-capitalize fs-5">
+                    Contact Us
+                  </p>
+                  <p class="text-white-color">
+                    <i class="fas fa-phone-alt me-2"></i> +1-615-721-2650
+                  </p>
+                  <p class="text-white-color">
+                    <i class="fas fa-envelope me-2"></i> contactus@rxiedu.com
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div
+            class="row justify-content-center align-items-center mt-5"
+          >
+            <div class="col-12 m-5">
+              <p class="footer-copyright text-center">
+                © <span class="current-year"></span>
+                <a
+                  href="/"
+                  title="Developed by RobotiX Institute"
+                  class="text-theme-color"
+                  >RobotiX Institute</a
+                >, All Rights Reserved.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </footer>
+    <!-- End Footer -->
+
+    
+    <!-- ================= Main Section Wrapper End ================= -->
+    <a href="tel:+16157212650" class="scrollToTop scroll-btn" style="opacity: 1;
+    translate: none;
+    rotate: none;
+    scale: none;
+    transform: translate(0px, 0px);
+    visibility: inherit;
+    position: fixed;
+    right: 60px;
+    bottom: 60px;
+    z-index: 96;
+    display: inline-block;
+    border-radius: 50%;"
+      ><i class="far fa-phone phone-btn"></i
+    ></a>
+    <!-- ***************** Code End  Here ***************** -->
+
+
+    <!--================= All Js File ================= -->
+    <!-- Jquery -->
+    <script src="/js/vendor/jquery-3.6.0.min.js"></script>
+    <!-- Jquery UI -->
+    <script src="/js/jquery-ui.min.js"></script>
+    <!-- Jquery UI -->
+    <script src="/js/moment.min.js"></script>
+    <!-- Jquery UI -->
+    <script src="/js/daterangepicker.min.js"></script>
+    <!-- Swiper Slider -->
+    <script src="/js/swiper-bundle.min.js"></script>
+    <!-- Bootstrap -->
+    <script src="/js/bootstrap.min.js"></script>
+    <!-- WOW.js Animation -->
+    <script src="/js/wow.min.js"></script>
+    <!-- Magnific Popup -->
+    <script src="/js/jquery.magnific-popup.min.js"></script>
+    <!-- Image Loaded Jquery -->
+    <script src="/js/imagesloaded.pkgd.min.js"></script>
+    <!-- Gsap -->
+    <script src="/js/gsap.min.js"></script>
+    <!-- ScrollTrigger -->
+    <script src="/js/ScrollTrigger.min.js"></script>
+    <!-- ScrollToPlugin -->
+    <script src="/js/ScrollToPlugin.min.js"></script>
+    <!-- SplitText -->
+    <script src="/js/SplitText.min.js"></script>
+
+    <!-- Main Js File -->
+    <script src="/js/main.js"></script>
+
+    <!-- Our Js File -->
+    <script src="/js/script-1.js"></script>
+    <script src="/js/script-2.js"></script>
+  </body>
+</html>

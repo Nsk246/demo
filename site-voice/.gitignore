@@ -1,0 +1,13 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+.venv/
+.env
+# Built by ingest, never by git. A committed db silently deploys an old crawl.
+# data/pages/ is different: it is a build input, committed on purpose when the
+# crawl has to happen on a machine that can reach the site.
+data/*.db
+data/*.db-wal
+data/*.db-shm
+.webhook-backup.json

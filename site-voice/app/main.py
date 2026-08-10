@@ -1,0 +1,271 @@
+"""FastAPI entrypoint: Twilio webhook, media stream bridge, monitor socket."""
+
+from __future__ import annotations
+
+import contextlib
+import json
+import logging
+import pathlib
+import uuid
+from contextlib import asynccontextmanager
+
+from fastapi import FastAPI, Form, Request, Response, WebSocket, WebSocketDisconnect
+from fastapi.responses import HTMLResponse
+
+from . import agent as agent_mod
+from .config import get_settings, log_config_source
+from .providers.gemini import GeminiLiveProvider
+from .providers.mock import MockProvider
+from .retrieval import Index
+from .store import connect, site_row
+from .telephony.bridge import MediaBridge
+from .telephony.twilio_webhook import (
+    connect_stream_twiml,
+    public_url,
+    validate_twilio_signature,
+)
+
+log = logging.getLogger(__name__)
+settings = get_settings()
+
+SITE: dict = {}
+INDEX: Index | None = None
+CONN = None
+
+# Live monitor sockets, keyed by call id. The screen subscribes here.
+_monitors: dict[str, set[WebSocket]] = {}
+# Caller and dialled number per call, carried from the webhook to the stream
+# socket. Twilio's `start` event does not include them.
+_dialled: dict[str, dict] = {}
+# Finished calls, newest first, so the screen survives a refresh.
+_history: list[dict] = []
+
+
+@asynccontextmanager
+async def lifespan(_: FastAPI):
+    global CONN, INDEX
+    logging.basicConfig(level=logging.INFO)
+    log.info("config from %s", log_config_source())
+    if not settings.public_base_url:
+        log.error(
+            "PUBLIC_BASE_URL is empty. The stream URL handed to Twilio will be "
+            "wss:///ws/twilio/... with no host, and the call will connect and "
+            "then go silent."
+        )
+    CONN = connect(settings.site_db)
+    row = site_row(CONN)
+    if row:
+        SITE.update(dict(row))
+        INDEX = Index(CONN, row["dims"])
+        log.info(
+            "loaded %s: %s pages, %s chunks, crawled %s",
+            row["name"], row["page_count"], INDEX.size, row["crawled_at"],
+        )
+    else:
+        log.error(
+            "no site ingested. run: python -m app.ingest <url>. Until then the "
+            "agent has nothing to answer from and every call will be useless."
+        )
+    yield
+    CONN.close()
+
+
+app = FastAPI(title="site-voice", lifespan=lifespan)
+
+
+def effective_provider() -> str:
+    """Which provider will actually handle the next call.
+
+    Not the same as the configured value. Asking for gemini with no API key
+    silently yields a mock while /health still says gemini, which is a bad way
+    to lose twenty minutes.
+    """
+    if settings.realtime_provider == "mock":
+        return "mock"
+    if settings.realtime_provider == "gemini" and not settings.gemini_api_key:
+        if settings.app_env == "prod":
+            raise RuntimeError(
+                "REALTIME_PROVIDER=gemini but GEMINI_API_KEY is unset. Set the "
+                "key or set REALTIME_PROVIDER=mock explicitly."
+            )
+        log.warning(
+            "GEMINI_API_KEY is unset, falling back to the mock provider. Calls "
+            "will not reach a real model."
+        )
+        return "mock"
+    return settings.realtime_provider
+
+
+def build_provider():
+    if effective_provider() == "mock":
+        return MockProvider()
+    return GeminiLiveProvider(
+        api_key=settings.gemini_api_key,
+        model=settings.gemini_live_model,
+        voice=settings.gemini_voice,
+        thinking_level=settings.gemini_thinking_level,
+        end_of_speech_silence_ms=settings.gemini_end_of_speech_ms,
+    )
+
+
+@app.get("/health")
+async def health():
+    actual = effective_provider()
+    body = {
+        "ok": True,
+        "provider": actual,
+        "site": SITE.get("root_url"),
+        "pages": SITE.get("page_count", 0),
+        "chunks": INDEX.size if INDEX else 0,
+        "crawled_at": SITE.get("crawled_at"),
+    }
+    if actual != settings.realtime_provider:
+        body["configured"] = settings.realtime_provider
+        body["note"] = "falling back: GEMINI_API_KEY is unset"
+    if not SITE:
+        body["ok"] = False
+        body["note"] = "no site ingested"
+    return body
+
+
+@app.post("/twilio/voice")
+async def inbound_call(
+    request: Request, To: str = Form(""), From: str = Form(""), CallSid: str = Form("")
+):
+    """Twilio hits this when someone dials."""
+    form = dict(await request.form())
+    if settings.twilio_validate_signature and settings.app_env != "test":
+        signed_url = public_url(request)
+        ok = validate_twilio_signature(
+            settings.twilio_auth_token,
+            signed_url,
+            form,
+            request.headers.get("X-Twilio-Signature", ""),
+        )
+        if not ok:
+            log.warning(
+                "twilio signature mismatch. Validated against %s. If that is not "
+                "the URL configured in the Twilio console, they must match "
+                "exactly, including https and any trailing slash.",
+                signed_url,
+            )
+            return Response(status_code=403, content="invalid signature")
+
+    call_id = CallSid or str(uuid.uuid4())
+    _dialled[call_id] = {"to": To, "from": From}
+    base = settings.public_base_url.replace("https://", "").replace("http://", "")
+    ws_url = f"wss://{base}/ws/twilio/{call_id}"
+    return Response(content=connect_stream_twiml(ws_url), media_type="application/xml")
+
+
+@app.websocket("/ws/twilio/{call_id}")
+async def twilio_stream(ws: WebSocket, call_id: str):
+    await ws.accept()
+    routing = _dialled.pop(call_id, {})
+    sources: list[str] = []
+
+    async def fan_out(payload: dict):
+        payload["call_id"] = call_id
+        dead = set()
+        for sub in _monitors.get("*", set()):
+            try:
+                await sub.send_text(json.dumps(payload))
+            except Exception:
+                dead.add(sub)
+        _monitors.get("*", set()).difference_update(dead)
+
+    def note_sources(urls: list[str]):
+        for url in urls:
+            if url not in sources:
+                sources.append(url)
+
+    dispatcher = None
+    tools: list[dict] = []
+    instructions = "You answer the phone. Keep replies short."
+    if INDEX is not None and SITE:
+        instructions = agent_mod.build(
+            name=SITE["name"],
+            brief=SITE["brief"],
+            crawled_at=SITE["crawled_at"],
+            facts=SITE.get("facts", ""),
+            tz=settings.site_timezone,
+        )
+        tools = agent_mod.TOOL_SCHEMAS
+        dispatcher = agent_mod.ToolDispatcher(
+            index=INDEX, settings=settings, on_sources=note_sources
+        )
+    else:
+        log.error("call %s arrived with no site loaded", call_id)
+
+    await fan_out({"type": "call_started", "from": routing.get("from", "")})
+
+    bridge = MediaBridge(
+        ws,
+        build_provider(),
+        instructions=instructions,
+        tools=tools,
+        on_event=fan_out,
+        max_call_seconds=settings.max_call_seconds,
+        dispatch_tool=dispatcher.dispatch if dispatcher else None,
+        tool_timeout_ms=settings.tool_timeout_ms,
+        greeting=agent_mod.greeting(SITE.get("name", "")) if SITE else None,
+    )
+
+    summary = {}
+    try:
+        summary = await bridge.run()
+    except WebSocketDisconnect:
+        pass
+    except Exception:
+        log.exception("call %s failed", call_id)
+    finally:
+        record = {
+            "call_id": call_id,
+            "from": routing.get("from", ""),
+            "transcript": bridge.transcript,
+            "sources": sources,
+            "messages": dispatcher.messages if dispatcher else [],
+            "lookups": dispatcher.lookups if dispatcher else [],
+            "stats": summary,
+        }
+        _history.insert(0, record)
+        del _history[25:]
+        with contextlib.suppress(Exception):
+            await fan_out({"type": "call_finished", **record})
+        log.info("call %s: %s", call_id, summary)
+
+
+@app.websocket("/ws/monitor")
+async def monitor(ws: WebSocket):
+    await ws.accept()
+    _monitors.setdefault("*", set()).add(ws)
+    await ws.send_text(
+        json.dumps(
+            {
+                "type": "hello",
+                "site": SITE.get("name", ""),
+                "root": SITE.get("root_url", ""),
+                "chunks": INDEX.size if INDEX else 0,
+            }
+        )
+    )
+    try:
+        while True:
+            await ws.receive_text()
+    except Exception:
+        pass
+    finally:
+        _monitors.get("*", set()).discard(ws)
+
+
+@app.get("/api/calls")
+async def calls():
+    return {"calls": _history}
+
+
+@app.get("/", response_class=HTMLResponse)
+async def screen():
+    html = (pathlib.Path(__file__).with_name("screen.html")).read_text()
+    return html.replace("__SITE__", SITE.get("name", "no site ingested")).replace(
+        "__ROOT__", SITE.get("root_url", "")
+    )

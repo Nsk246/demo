@@ -1,0 +1,44 @@
+# What a parent actually asks in the first ninety seconds of a call.
+# Run: python scripts/eval.py
+# Lines starting with # are ignored.
+
+# --- should hit the brief, no lookup needed ---
+what does RobotiX Institute do
+where are you located
+what is the phone number
+how much do the classes cost
+what ages do you teach
+
+# --- should hit a lookup, one clear source ---
+how much is the Python coding class
+how much is VEX V5 for high school
+what age is LEGO Robotics Basic for
+what is the difference between LEGO basic and LEGO advanced
+how big are the classes
+how long is each session
+do you provide the robots or do we bring our own
+does my child need any experience
+can we try a class before paying
+what happens if we miss a class
+can my child move up to a harder class later
+what is the address in Murfreesboro
+what is the address in Brentwood
+when is the summer camp
+what do you do at the fall camp
+are the instructors qualified
+what is the difference between a camp and a regular program
+can I open my own centre
+
+# --- the ones the website does not answer ---
+# Without data/facts.md these must all MISS. That is correct behaviour and
+# it is exactly why the facts file exists.
+what days are the classes
+what time is the Saturday class
+what are your opening hours
+do you offer sibling discounts
+do you take walk-ins
+
+# --- must MISS no matter what. If any of these match, MIN_SCORE is too low ---
+do you sell used cars
+what is your refund policy for hotel bookings
+can you fix my laptop
