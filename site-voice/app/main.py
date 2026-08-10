@@ -165,14 +165,25 @@ async def twilio_stream(ws: WebSocket, call_id: str):
     sources: list[str] = []
 
     async def fan_out(payload: dict):
+        """Push an event to every open screen.
+
+        Iterate a snapshot, not the live set. `send_text` is a suspension
+        point, and the screen reconnects every 1.5 seconds when its socket
+        drops, so a browser reconnecting mid-iteration mutates the set being
+        walked and Python raises "Set changed size during iteration". That
+        used to escape into the bridge and end the call, which looked like a
+        random disconnect with nothing in the log.
+        """
         payload["call_id"] = call_id
+        subscribers = list(_monitors.get("*", ()))
         dead = set()
-        for sub in _monitors.get("*", set()):
+        for sub in subscribers:
             try:
                 await sub.send_text(json.dumps(payload))
             except Exception:
                 dead.add(sub)
-        _monitors.get("*", set()).difference_update(dead)
+        if dead:
+            _monitors.get("*", set()).difference_update(dead)
 
     def note_sources(urls: list[str]):
         for url in urls:
@@ -208,6 +219,9 @@ async def twilio_stream(ws: WebSocket, call_id: str):
         max_call_seconds=settings.max_call_seconds,
         dispatch_tool=dispatcher.dispatch if dispatcher else None,
         tool_timeout_ms=settings.tool_timeout_ms,
+        # Two connect attempts with a pause between them do not fit in ten
+        # seconds, and a timeout here cancels the retry that would have worked.
+        connect_timeout_s=20.0,
         greeting=agent_mod.greeting(SITE.get("name", "")) if SITE else None,
     )
 

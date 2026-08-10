@@ -213,3 +213,20 @@ async def test_interrupted_turn_records_only_what_the_caller_heard():
     await asyncio.wait_for(bridge.run(), timeout=5)
     cut = [t for t in bridge.transcript if t.get("interrupted")]
     assert cut, "an interrupted agent turn must be recorded as interrupted"
+
+
+@pytest.mark.asyncio
+async def test_a_failing_monitor_cannot_end_the_call():
+    """The screen is an observer. A browser reconnecting at the wrong moment
+    used to raise out of the fan-out and kill the bridge, which looked like a
+    random disconnect with nothing in the log."""
+    ws = FakeTwilioWS([start_msg()] + [media_msg(quiet()) for _ in range(10)] + [STOP])
+
+    async def hostile(_payload):
+        raise RuntimeError("Set changed size during iteration")
+
+    provider = MockProvider([ProviderEvent(kind="audio", audio=tone(200))])
+    bridge = MediaBridge(ws, provider, on_event=hostile)
+    await asyncio.wait_for(bridge.run(), timeout=5)
+    # The call ran to Twilio's stop rather than dying on the observer.
+    assert ws.events("media"), "audio must still reach the caller"

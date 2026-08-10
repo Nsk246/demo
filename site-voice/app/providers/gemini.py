@@ -41,6 +41,7 @@ class GeminiLiveProvider:
         self.end_of_speech_silence_ms = end_of_speech_silence_ms
         self._session = None
         self._ctx = None
+        self._entered = False
         self._closed = False
 
     async def connect(self, *, instructions: str, tools: list[dict]) -> None:
@@ -70,27 +71,62 @@ class GeminiLiveProvider:
             # caller hears the delay, so this is not a free knob.
             config["thinking_config"] = {"thinking_level": self.thinking_level}
 
-        self._ctx = self._client.aio.live.connect(model=self.model, config=config)
-        try:
-            self._session = await self._ctx.__aenter__()
-        except Exception as exc:
-            # Model ids churn on the developer tier. Say which one failed
-            # rather than surfacing a bare 404 from deep in the SDK.
-            raise RuntimeError(
-                f"could not open a Gemini Live session with model "
-                f"{self.model!r}. Check the model id is current at "
-                f"https://ai.google.dev/gemini-api/docs/models. Underlying "
-                f"error: {type(exc).__name__}: {exc}"
-            ) from exc
+        # Retry once. Live sessions are rate limited by concurrent count on
+        # the developer tier, and a slot freed by the previous call is often
+        # a second or two behind the call that freed it.
+        last: Exception | None = None
+        for attempt in range(2):
+            self._ctx = self._client.aio.live.connect(model=self.model, config=config)
+            try:
+                self._session = await self._ctx.__aenter__()
+                self._entered = True
+                return
+            except asyncio.CancelledError:
+                # The caller timed us out. Drop the context without entering
+                # it, or close() will call __aexit__ on something that never
+                # opened and the session slot stays held.
+                self._ctx = None
+                raise
+            except Exception as exc:
+                last = exc
+                self._ctx = None
+                if attempt == 0:
+                    log.warning(
+                        "live session did not open (%s: %s), retrying once",
+                        type(exc).__name__, exc,
+                    )
+                    await asyncio.sleep(1.5)
+        # Model ids churn on the developer tier. Say which one failed rather
+        # than surfacing a bare 404 from deep in the SDK.
+        detail = f"{type(last).__name__}: {last}"
+        hint = ""
+        if "429" in detail or "RESOURCE_EXHAUSTED" in detail.upper():
+            hint = (
+                " This is a quota error, not a code problem. The Live API "
+                "limits concurrent sessions by usage tier and the free tier "
+                "is very low, so a call placed while another is still open "
+                "gets refused. Enable billing on the project for Tier 1, "
+                "which is pay as you go and costs almost nothing at demo "
+                "volume."
+            )
+        # `from last`, not `from exc`: Python deletes the `except ... as exc`
+        # name at the end of its block, so referencing it here is a NameError
+        # on the exact path that was supposed to report the real failure.
+        raise RuntimeError(
+            f"could not open a Gemini Live session with model {self.model!r}. "
+            f"Check the model id is current at "
+            f"https://ai.google.dev/gemini-api/docs/models. Underlying error: "
+            f"{detail}.{hint}"
+        ) from last
 
     @staticmethod
     def _require_sdk() -> None:
         """Check the SDK surface before a caller is on the line.
 
-        send_realtime_input and send_tool_response arrived in google-genai
+        `send_realtime_input` and `send_tool_response` arrived in google-genai
         1.9.0. On an older one the session opens, the caller hears the line go
-        live, and then an AttributeError kills the call with nothing said.
-        Fail at connect instead, where the log is readable.
+        live, and then an AttributeError kills the call with nothing said. Fail
+        at connect instead, where the log is readable.
         """
         import google.genai
         from google.genai import live
@@ -177,7 +213,7 @@ class GeminiLiveProvider:
 
     async def close(self) -> None:
         self._closed = True
-        if self._ctx is not None:
+        if self._ctx is not None and self._entered:
             try:
                 await self._ctx.__aexit__(None, None, None)
             except Exception as exc:

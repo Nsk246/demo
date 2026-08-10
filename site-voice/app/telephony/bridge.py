@@ -162,8 +162,20 @@ class MediaBridge:
     # ---------------------------------------------------------------- helpers
 
     async def _emit(self, payload: dict) -> None:
-        if self.on_event:
+        """Send an event to the observer, and never let it end the call.
+
+        The observer is a monitoring screen. Nothing it does should reach the
+        caller. Without this guard a browser reconnecting at the wrong moment
+        raised out of the fan-out, through here, and killed the bridge task.
+        """
+        if not self.on_event:
+            return
+        try:
             await self.on_event(payload)
+        except asyncio.CancelledError:
+            raise
+        except Exception as exc:
+            log.warning("monitor fan-out failed, call continues: %r", exc)
 
     async def _send_to_twilio(self, ulaw: bytes) -> None:
         if not self.stream_sid:
@@ -301,6 +313,10 @@ class MediaBridge:
             len(self.transcript),
             self.stats.barge_ins,
             len(self.tool_calls),
+        )
+        log.info(
+            "agent spoke roughly %.1fs across the call",
+            self._agent_frames * 0.02,
         )
         if self._agent_frames and not self._media_frames:
             log.warning(
@@ -457,6 +473,7 @@ class MediaBridge:
             while True:
                 try:
                     await self._send_to_twilio(self._outbound.get_nowait())
+                    self._agent_frames += 1
                 except asyncio.QueueEmpty:
                     break
             # Yield so the inbound pump and tool tasks are not starved.
