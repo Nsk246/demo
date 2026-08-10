@@ -46,6 +46,7 @@ class GeminiLiveProvider:
     async def connect(self, *, instructions: str, tools: list[dict]) -> None:
         from google import genai  # imported lazily so tests need no SDK
 
+        self._require_sdk()
         self._client = genai.Client(api_key=self.api_key)
         config = {
             "response_modalities": ["AUDIO"],
@@ -81,6 +82,30 @@ class GeminiLiveProvider:
                 f"https://ai.google.dev/gemini-api/docs/models. Underlying "
                 f"error: {type(exc).__name__}: {exc}"
             ) from exc
+
+    @staticmethod
+    def _require_sdk() -> None:
+        """Check the SDK surface before a caller is on the line.
+
+        send_realtime_input and send_tool_response arrived in google-genai
+        1.9.0. On an older one the session opens, the caller hears the line go
+        live, and then an AttributeError kills the call with nothing said.
+        Fail at connect instead, where the log is readable.
+        """
+        import google.genai
+        from google.genai import live
+
+        missing = [
+            name
+            for name in ("send_realtime_input", "send_tool_response")
+            if not hasattr(live.AsyncSession, name)
+        ]
+        if missing:
+            raise RuntimeError(
+                f"google-genai {getattr(google.genai, '__version__', 'unknown')} "
+                f"is too old: it has no {', '.join(missing)}. Needs 1.9.0 or "
+                f"later. Fix requirements.txt and redeploy."
+            )
 
     async def send_audio(self, pcm: bytes) -> None:
         from google.genai import types

@@ -12,27 +12,38 @@ from working again.
 from __future__ import annotations
 
 import json
-import os
 import sys
 from pathlib import Path
 
-from twilio.rest import Client
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
+from twilio.rest import Client  # noqa: E402
+
+from app.config import get_settings, log_config_source  # noqa: E402
 
 BACKUP = Path(__file__).resolve().parent.parent / ".webhook-backup.json"
 
 
 def client() -> Client:
-    sid = os.environ.get("TWILIO_ACCOUNT_SID")
-    token = os.environ.get("TWILIO_AUTH_TOKEN")
-    if not sid or not token:
-        sys.exit("set TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN first")
-    return Client(sid, token)
+    """Read credentials the same way the service does.
+
+    Reading os.environ directly meant this script worked only in the one shell
+    where the values had been exported, and silently disagreed with the app
+    about which account it was talking to.
+    """
+    s = get_settings()
+    if not s.twilio_account_sid or not s.twilio_auth_token:
+        sys.exit(
+            f"TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN are empty. Config came "
+            f"from {log_config_source()}."
+        )
+    return Client(s.twilio_account_sid, s.twilio_auth_token)
 
 
 def number(cli: Client):
-    target = os.environ.get("TWILIO_NUMBER")
-    if not target:
-        sys.exit("set TWILIO_NUMBER, for example +16155551234")
+    target = get_settings().twilio_number
+    if not target or target == "+1":
+        sys.exit("set TWILIO_NUMBER in .env, for example +16155551234")
     found = cli.incoming_phone_numbers.list(phone_number=target, limit=1)
     if not found:
         sys.exit(f"{target} is not on this Twilio account")
