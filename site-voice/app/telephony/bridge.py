@@ -120,7 +120,7 @@ class MediaBridge:
         tool_timeout_ms: int = 1200,
         connect_timeout_s: float = 10.0,
         greeting: str | None = None,
-        stall_after_ms: int = 450,
+        stall_after_ms: int = 1500,
     ):
         self.ws = ws
         self.provider = provider
@@ -135,9 +135,11 @@ class MediaBridge:
         # wait for the other and the caller hears dead air, which reads as a
         # broken line rather than a silent agent.
         self.greeting = greeting
-        # A tool slower than this gets the agent to say something. Dead air
-        # is the single thing that makes a voice agent feel broken, and a
-        # database round trip on a bad connection is easily half a second.
+        # A tool slower than this gets the agent to say something. Set above
+        # the measured lookup time on purpose: every nudge is a chance for the
+        # model to keep generating past the holding phrase and invent an
+        # answer, which it has done. Lookups here land around 1100ms, so at
+        # 1500ms a normal one never triggers this path at all.
         self.stall_after_ms = stall_after_ms
         self.tool_calls: list[dict] = []
         self._tool_tasks: set[asyncio.Task] = set()
@@ -421,8 +423,11 @@ class MediaBridge:
         except TimeoutError:
             with contextlib.suppress(Exception):
                 await self.provider.send_text(
-                    "(That is taking a second. Tell the caller you are just "
-                    "checking, in three or four words, then wait.)"
+                    "(SYSTEM: the lookup is still running and you do not have "
+                    "the answer yet. Say exactly one short holding phrase of "
+                    "three or four words, such as 'one moment please', and "
+                    "then STOP. Do not answer the question. Do not state any "
+                    "fact, price, time, or address. The result is coming.)"
                 )
             await self._emit({"type": "stalling", "name": ev.tool_name})
             remaining = max(0.1, (self.tool_timeout_ms - self.stall_after_ms) / 1000)

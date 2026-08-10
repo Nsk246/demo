@@ -220,6 +220,7 @@ async def twilio_stream(ws: WebSocket, call_id: str):
         max_call_seconds=settings.max_call_seconds,
         dispatch_tool=dispatcher.dispatch if dispatcher else None,
         tool_timeout_ms=settings.tool_timeout_ms,
+        stall_after_ms=settings.stall_after_ms,
         # Two connect attempts with a pause between them do not fit in ten
         # seconds, and a timeout here cancels the retry that would have worked.
         connect_timeout_s=20.0,

@@ -156,7 +156,12 @@ async def test_a_slow_lookup_makes_the_agent_hold_the_line():
     bridge = MediaBridge(ws, provider, dispatch_tool=slow, stall_after_ms=50,
                          tool_timeout_ms=2000)
     await asyncio.wait_for(bridge.run(), timeout=5)
-    assert any("checking" in t for t in provider.sent_text)
+    nudge = next((t for t in provider.sent_text if "lookup is still running" in t), "")
+    assert nudge, "the agent was never told to hold the line"
+    # The nudge must forbid answering. On a real call a softer wording let the
+    # model run past its holding phrase and invent opening hours.
+    assert "Do not answer the question" in nudge
+    assert "Do not state any fact" in nudge
     assert provider.tool_results, "the result must still arrive after the stall"
 
 

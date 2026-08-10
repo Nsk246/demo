@@ -72,6 +72,10 @@ class Settings(BaseSettings):
     # backoff alone exceeded the budget. Both are fixed, but the ceiling stays
     # generous because a slow answer beats a wrong one.
     tool_timeout_ms: int = 8000
+    # Above the measured lookup time on purpose. Every stall nudge is a chance
+    # for the model to run past its holding phrase and invent an answer, which
+    # it has done on a real call.
+    stall_after_ms: int = 1500
     max_call_seconds: int = 600
 
     max_pages: int = 120

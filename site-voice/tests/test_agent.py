@@ -19,6 +19,26 @@ def test_prompt_states_the_crawl_date_and_the_current_time():
     assert "Acme roofs things." in text
 
 
+def test_prompt_forbids_inventing_times():
+    """On a real call the agent answered "open until seven PM on Saturdays"
+    for a site that publishes no hours at all."""
+    text = agent_mod.build(name="Acme", brief="b", crawled_at="today")
+    assert "you are inventing it" in text
+    assert "While a lookup is running you do not have the answer" in text
+
+
+def test_prompt_never_refers_to_the_business_in_third_person():
+    """It regressed to "they offer" on turns answered from the summary."""
+    text = agent_mod.build(name="Acme", brief="b", crawled_at="today")
+    assert "'We teach ages four to fourteen'" in text
+    assert "on their pricing page" not in text
+
+
+def test_greeting_says_the_name_once():
+    """It opened with "RobotiX Institute, this is RobotiX Institute"."""
+    assert "Do not say the name twice" in agent_mod.greeting("Acme")
+
+
 def test_prompt_says_what_to_do_with_an_empty_brief():
     text = agent_mod.build(name="", brief="", crawled_at="today")
     assert "lookup_site for everything" in text
