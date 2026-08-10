@@ -280,9 +280,30 @@ def test_the_closing_question_is_forbidden_outright():
     assert text.count("anything else") == 1
 
 
-def test_follow_up_questions_are_forbidden_outright():
+def test_generic_questions_are_banned_but_earned_offers_are_not():
+    """Banning every follow-up removed the repetition and the reason for the
+    call along with it. A generic "which program interests you?" is filler; a
+    free trial offered after describing a programme is why they rang."""
     text = agent_mod.build(name="Acme", brief="b", crawled_at="today")
-    assert "Do not ask a follow-up question after answering" in text
+    assert "A generic question is never fine" in text
+    assert "free trial class if you" in text
+
+
+def test_offers_are_capped_and_never_repeated():
+    text = agent_mod.build(name="Acme", brief="b", crawled_at="today")
+    assert "Two offers in an entire call is the ceiling" in text
+    assert "never repeat one" in text
+    assert "no further offers follow" in text
+
+
+def test_offers_must_come_from_the_site():
+    text = agent_mod.build(name="Acme", brief="b", crawled_at="today")
+    assert "Never invent an offer" in text
+
+
+def test_factual_runs_do_not_get_offers():
+    text = agent_mod.build(name="Acme", brief="b", crawled_at="today")
+    assert "Facts get facts" in text
 
 
 def test_prices_must_carry_their_unit():
