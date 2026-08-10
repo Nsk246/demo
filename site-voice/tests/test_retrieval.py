@@ -57,7 +57,11 @@ def test_threshold_excludes_weak_matches(index):
 def test_render_tells_the_model_what_to_do_when_empty():
     out = render([])
     assert out["found"] is False
-    assert "message" in out["hint"].lower()
+    hint = out["hint"].lower()
+    assert "details" in hint, "the model must be told to offer a callback"
+    # The hint steers phrasing, so it must not put "website" in the agent's
+    # mouth. A receptionist does not narrate where they read something.
+    assert "website" not in hint.replace("without mentioning a website", "")
 
 
 def test_render_keeps_source_per_passage(index):

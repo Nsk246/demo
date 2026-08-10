@@ -1,5 +1,6 @@
 """Prompt assembly and tool dispatch."""
 import asyncio
+import re
 
 import pytest
 
@@ -280,25 +281,43 @@ def test_the_closing_question_is_forbidden_outright():
     assert text.count("anything else") == 1
 
 
-def test_generic_questions_are_banned_but_earned_offers_are_not():
-    """Banning every follow-up removed the repetition and the reason for the
-    call along with it. A generic "which program interests you?" is filler; a
-    free trial offered after describing a programme is why they rang."""
+def test_topic_menus_are_banned_but_a_real_next_step_is_not():
+    """On a real call it asked "would you like Python details instead?" when
+    the caller had asked about LEGO. Handing over a menu is not an offer."""
     text = agent_mod.build(name="Acme", brief="b", crawled_at="today")
-    assert "A generic question is never fine" in text
+    assert "is not a next step and is never allowed" in text
     assert "free trial class if you" in text
 
 
-def test_offers_are_capped_and_never_repeated():
+def test_the_website_is_never_mentioned_aloud():
+    """It said "according to our website" and "that isn't on our site". A
+    receptionist knows things or does not; they do not narrate where they
+    read it. The screen already shows the source."""
     text = agent_mod.build(name="Acme", brief="b", crawled_at="today")
-    assert "Two offers in an entire call is the ceiling" in text
-    assert "never repeat one" in text
-    assert "no further offers follow" in text
+    assert "Never mention the website" in text
+    assert "I don't have that to hand" in text
+    for line in text.split("\n"):
+        if "Never mention" in line:
+            continue
+        assert not re.search(r"say (it is not on the site|the site does not)", line, re.I), line
 
 
-def test_offers_must_come_from_the_site():
+def test_one_next_step_per_call():
+    """Two was not obeyed: a real call produced five. One is easier to count
+    and the failure mode of forgetting is silence, not pestering."""
     text = agent_mod.build(name="Acme", brief="b", crawled_at="today")
-    assert "Never invent an offer" in text
+    assert "One next step in an entire call" in text
+    assert "no further offers follow for the rest of the call" in text
+
+
+def test_an_offer_needs_no_confirmation_question():
+    text = agent_mod.build(name="Acme", brief="b", crawled_at="today")
+    assert "needs no confirmation question" in text
+
+
+def test_offers_must_be_real():
+    text = agent_mod.build(name="Acme", brief="b", crawled_at="today")
+    assert "Never invent one" in text
 
 
 def test_factual_runs_do_not_get_offers():

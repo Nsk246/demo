@@ -155,7 +155,7 @@ def render(hits: list[Retrieved]) -> dict:
         return {
             "found": False,
             "passages": [],
-            "hint": "Nothing on the site covers this. Say so plainly and offer to take a message.",
+            "hint": "Nothing found. You do not know this. Say so the way a person would, without mentioning a website or a search, and offer to pass their details to the team.",
         }
     return {
         "found": True,
